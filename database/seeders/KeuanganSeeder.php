@@ -1,0 +1,148 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class KeuanganSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        DB::table('keuangan')->insert([
+            [
+                'id' => 1,
+                'tanggal_transaksi' => '2026-06-15',
+                'jenis_transaksi'   => 'pemasukan',
+                'nominal'           => 1500000,
+                'keterangan'        => 'Pembayaran Kelas Juni - Ahmad Rizki',
+                'status'            => 'lunas',
+                'id_cabang'         => 1,
+                'id_siswa'          => 1,
+                'id_pelatih'        => null,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ],
+            [
+                'id' => 2,
+                'tanggal_transaksi' => '2026-06-14',
+                'jenis_transaksi'   => 'pengeluaran',
+                'nominal'           => 500000,
+                'keterangan'        => 'Pembelian Peralatan Renang',
+                'status'            => 'lunas',
+                'id_cabang'         => 1,
+                'id_siswa'          => null,
+                'id_pelatih'        => null,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ],
+            [
+                'id' => 3,
+                'tanggal_transaksi' => '2026-06-13',
+                'jenis_transaksi'   => 'pemasukan',
+                'nominal'           => 1200000,
+                'keterangan'        => 'Pembayaran Kelas Juni - Siti Nurhaliza',
+                'status'            => 'pending',
+                'id_cabang'         => 2,
+                'id_siswa'          => 2,
+                'id_pelatih'        => null,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ],
+            [
+                'id' => 4,
+                'tanggal_transaksi' => '2026-06-12',
+                'jenis_transaksi'   => 'pengeluaran',
+                'nominal'           => 300000,
+                'keterangan'        => 'Biaya Maintenance Kolam',
+                'status'            => 'lunas',
+                'id_cabang'         => 1,
+                'id_siswa'          => null,
+                'id_pelatih'        => null,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ],
+            [
+                'id' => 5,
+                'tanggal_transaksi' => '2026-06-11',
+                'jenis_transaksi'   => 'pemasukan',
+                'nominal'           => 1500000,
+                'keterangan'        => 'Pembayaran Kelas Juni - Budi Santoso',
+                'status'            => 'lunas',
+                'id_cabang'         => 1,
+                'id_siswa'          => 3,
+                'id_pelatih'        => null,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ],
+            [
+                'id' => 6,
+                'tanggal_transaksi' => '2026-06-10',
+                'jenis_transaksi'   => 'pengeluaran',
+                'nominal'           => 750000,
+                'keterangan'        => 'Gaji Pelatih - Minggu ke-2',
+                'status'            => 'lunas',
+                'id_cabang'         => 1,
+                'id_siswa'          => null,
+                'id_pelatih'        => 1,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ],
+            [
+                'id' => 7,
+                'tanggal_transaksi' => '2026-06-09',
+                'jenis_transaksi'   => 'pemasukan',
+                'nominal'           => 800000,
+                'keterangan'        => 'Pembayaran Kelas Juni - Diana Putri',
+                'status'            => 'pending',
+                'id_cabang'         => 1,
+                'id_siswa'          => 4,
+                'id_pelatih'        => null,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ],
+            [
+                'id' => 8,
+                'tanggal_transaksi' => '2026-06-16',
+                'jenis_transaksi'   => 'pemasukan',
+                'nominal'           => 1200000,
+                'keterangan'        => 'Pembayaran Kelas Juni - Fahri Ramadhan',
+                'status'            => 'lunas',
+                'id_cabang'         => 3,
+                'id_siswa'          => 7,
+                'id_pelatih'        => null,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ],
+            [
+                'id' => 9,
+                'tanggal_transaksi' => '2026-06-15',
+                'jenis_transaksi'   => 'pengeluaran',
+                'nominal'           => 400000,
+                'keterangan'        => 'Perlengkapan Renang Cabang Cimanggung',
+                'status'            => 'lunas',
+                'id_cabang'         => 3,
+                'id_siswa'          => null,
+                'id_pelatih'        => null,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ],
+            [
+                'id' => 10,
+                'tanggal_transaksi' => '2026-06-17',
+                'jenis_transaksi'   => 'pemasukan',
+                'nominal'           => 1050000,
+                'keterangan'        => 'Pembayaran Kelas Juni - Nadia Zaskia',
+                'status'            => 'lunas',
+                'id_cabang'         => 3,
+                'id_siswa'          => 8,
+                'id_pelatih'        => null,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ],
+        ]);
+    }
+}
