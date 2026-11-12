@@ -438,11 +438,31 @@
                 </div>
             @endif
 
+            <!-- Bulk Action Bar (Muncul ketika data absensi dipilih) -->
+            <div id="bulkActionBar" class="hidden items-center justify-between bg-sky-50 border border-sky-200 px-4 py-2.5 rounded-xl mb-4 transition-all">
+                <div class="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                    <i class="fa-solid fa-circle-check text-[#00a5ec]"></i>
+                    <span><span id="selectedCount" class="font-bold text-[#00a5ec]">0</span> data absensi dipilih</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="cancelBulkSelection()" class="px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 font-medium transition cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="button" onclick="openModalBulkDeleteAbsensi()" class="px-3.5 py-1.5 text-xs text-white bg-rose-500 hover:bg-rose-600 rounded-lg font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-trash-can text-[11px]"></i>
+                        <span>Hapus Terpilih</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Table Data Absensi -->
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs text-slate-700">
                     <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
                         <tr>
+                            <th class="py-3.5 px-4 w-10 text-center">
+                                <input type="checkbox" id="selectAllAbsensi" onchange="toggleSelectAllAbsensi(this)" class="w-4 h-4 text-[#00a5ec] rounded border-slate-300 focus:ring-[#00a5ec] cursor-pointer">
+                            </th>
                             <th class="py-3.5 px-4">Tanggal</th>
                             <th class="py-3.5 px-4">Nama Pelatih</th>
                             <th class="py-3.5 px-4">Status</th>
@@ -452,7 +472,10 @@
                     <tbody class="divide-y divide-slate-100">
                         @forelse($data_absensi as $absensi)
                             <tr class="absensi-pelatih-row hover:bg-sky-50/60 cursor-pointer transition group"
-                                onclick="openEditAbsensiPelatih({{ $absensi->id }}, '{{ addslashes($absensi->nama_pelatih) }}', '{{ $absensi->tanggal_kehadiran }}', '{{ $absensi->status_kehadiran }}', '{{ addslashes($absensi->keterangan ?? '') }}')">
+                                onclick="handleRowClick(event, {{ $absensi->id }}, '{{ addslashes($absensi->nama_pelatih) }}', '{{ $absensi->tanggal_kehadiran }}', '{{ $absensi->status_kehadiran }}', '{{ addslashes($absensi->keterangan ?? '') }}')">
+                                <td class="py-3.5 px-4 text-center" onclick="event.stopPropagation()">
+                                    <input type="checkbox" value="{{ $absensi->id }}" onchange="updateBulkActionUI()" class="checkbox-absensi w-4 h-4 text-[#00a5ec] rounded border-slate-300 focus:ring-[#00a5ec] cursor-pointer">
+                                </td>
                                 <td class="py-3.5 px-4 font-medium">{{ date('d M Y', strtotime($absensi->tanggal_kehadiran)) }}</td>
                                 <td class="py-3.5 px-4 font-semibold text-slate-800">{{ $absensi->nama_pelatih }}</td>
                                 <td class="py-3.5 px-4">
@@ -474,13 +497,13 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="py-8 text-center text-slate-400">
+                                <td colspan="5" class="py-8 text-center text-slate-400">
                                     Tidak ada data absensi pelatih ditemukan.
                                 </td>
                             </tr>
                         @endforelse
                         <tr id="absensiPelatihSearchNotFound" class="hidden">
-                            <td colspan="4" class="py-8 text-center text-slate-400">
+                            <td colspan="5" class="py-8 text-center text-slate-400">
                                 Tidak ada data absensi pelatih yang cocok dengan pencarian.
                             </td>
                         </tr>
@@ -1135,6 +1158,35 @@
         </div>
     </div>
 
+    <!-- Modal Konfirmasi Hapus Massal (Bulk Delete) Absensi Pelatih -->
+    <div id="modalBulkDeleteAbsensi" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-slate-100 mx-4">
+            <div class="text-center">
+                <div class="w-14 h-14 rounded-full bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-trash-can text-rose-500 text-xl"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-800 mb-1">Hapus Absensi Terpilih?</h3>
+                <p class="text-xs text-slate-500 mb-1">Anda akan menghapus sekaligus:</p>
+                <p class="text-sm font-bold text-rose-600 mb-2 px-2"><span id="bulkDeleteCountText">0</span> Data Absensi</p>
+                <p class="text-xs text-slate-400 mb-5 leading-relaxed">Catatan kehadiran pelatih yang dipilih akan dihapus permanen dari riwayat absensi.</p>
+                <form id="formBulkDeleteAbsensi" method="POST" action="{{ route('admin.pelatih.absensi.bulk_delete') }}">
+                    @csrf
+                    <div id="bulkDeleteInputsContainer"></div>
+                    <div class="flex gap-3">
+                        <button type="button" onclick="closeModal('modalBulkDeleteAbsensi')"
+                            class="flex-1 py-2.5 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-semibold text-xs transition cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-semibold text-xs shadow-sm transition cursor-pointer">
+                            <i class="fa-solid fa-trash-can mr-1"></i>Ya, Hapus Semua
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Floating Help Button -->
     <a href="#" title="Bantuan" class="fixed bottom-5 right-5 w-9 h-9 bg-white border border-slate-200 shadow-md rounded-full flex items-center justify-center text-slate-500 hover:text-slate-800 hover:shadow-lg transition duration-200 text-xs font-bold z-40">
         ?
@@ -1564,6 +1616,78 @@
                 startInput.value = '';
                 endInput.value = '';
             }
+        }
+
+        function handleRowClick(event, id, nama, tanggal, status, keterangan) {
+            if (event.target.tagName === 'INPUT' || event.target.closest('td')?.querySelector('input[type="checkbox"]')) {
+                return;
+            }
+            openEditAbsensiPelatih(id, nama, tanggal, status, keterangan);
+        }
+
+        function toggleSelectAllAbsensi(masterCheckbox) {
+            const rows = document.querySelectorAll('.absensi-pelatih-row');
+            rows.forEach(row => {
+                if (!row.classList.contains('hidden')) {
+                    const cb = row.querySelector('.checkbox-absensi');
+                    if (cb) cb.checked = masterCheckbox.checked;
+                }
+            });
+            updateBulkActionUI();
+        }
+
+        function updateBulkActionUI() {
+            const checkedBoxes = document.querySelectorAll('.checkbox-absensi:checked');
+            const allVisibleBoxes = Array.from(document.querySelectorAll('.absensi-pelatih-row'))
+                .filter(r => !r.classList.contains('hidden'))
+                .map(r => r.querySelector('.checkbox-absensi'))
+                .filter(Boolean);
+
+            const bar = document.getElementById('bulkActionBar');
+            const countEl = document.getElementById('selectedCount');
+            const masterCheckbox = document.getElementById('selectAllAbsensi');
+
+            if (checkedBoxes.length > 0) {
+                bar.classList.remove('hidden');
+                bar.classList.add('flex');
+                if (countEl) countEl.textContent = checkedBoxes.length;
+            } else {
+                bar.classList.add('hidden');
+                bar.classList.remove('flex');
+            }
+
+            if (masterCheckbox && allVisibleBoxes.length > 0) {
+                masterCheckbox.checked = allVisibleBoxes.every(cb => cb.checked);
+            } else if (masterCheckbox) {
+                masterCheckbox.checked = false;
+            }
+        }
+
+        function cancelBulkSelection() {
+            const checkboxes = document.querySelectorAll('.checkbox-absensi');
+            checkboxes.forEach(cb => cb.checked = false);
+            const masterCheckbox = document.getElementById('selectAllAbsensi');
+            if (masterCheckbox) masterCheckbox.checked = false;
+            updateBulkActionUI();
+        }
+
+        function openModalBulkDeleteAbsensi() {
+            const checked = document.querySelectorAll('.checkbox-absensi:checked');
+            if (checked.length === 0) return;
+
+            document.getElementById('bulkDeleteCountText').textContent = checked.length;
+            const container = document.getElementById('bulkDeleteInputsContainer');
+            container.innerHTML = '';
+
+            checked.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = cb.value;
+                container.appendChild(input);
+            });
+
+            openModal('modalBulkDeleteAbsensi');
         }
 
         function openEditAbsensiPelatih(id, nama, tanggal, status, keterangan) {

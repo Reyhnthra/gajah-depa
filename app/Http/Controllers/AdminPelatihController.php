@@ -558,6 +558,19 @@ class AdminPelatihController extends Controller
         return redirect()->back()->with('sukses', 'Data absensi pelatih berhasil dihapus.');
     }
 
+    // Menghapus Banyak Data Absensi Pelatih Sekaligus (Bulk Delete)
+    public function bulkDeleteAbsensi(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return redirect()->back()->withErrors(['msg' => 'Tidak ada data absensi pelatih yang dipilih.']);
+        }
+
+        $count = DB::table('absensi_pelatih')->whereIn('id', $ids)->delete();
+
+        return redirect()->back()->with('sukses', $count . ' data absensi pelatih berhasil dihapus.');
+    }
+
     // Update Data Pelatih oleh Admin
     public function update(Request $request, $id)
     {

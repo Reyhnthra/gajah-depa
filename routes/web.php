@@ -115,6 +115,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/pelatih/absensi/{id}/update', function () {
         return redirect()->route('admin.pelatih.index');
     });
+    Route::post('/admin/pelatih/absensi/bulk-delete', [AdminPelatihController::class, 'bulkDeleteAbsensi'])->name('admin.pelatih.absensi.bulk_delete');
     Route::post('/admin/pelatih/absensi/{id}/delete', [AdminPelatihController::class, 'deleteAbsensi'])->name('admin.pelatih.absensi.delete');
     Route::get('/admin/pelatih/absensi/{id}/delete', function () {
         return redirect()->route('admin.pelatih.index');
