@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Gajah Depa Akuatik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -13,19 +16,41 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        header,
+        .sticky-nav {
+            position: fixed !important;
+            top: 0px !important;
+            left: 0px !important;
+            right: 0px !important;
+            width: 100% !important;
+            z-index: 99999 !important;
+            background-color: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(10px) !important;
+            -webkit-backdrop-filter: blur(10px) !important;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08) !important;
+            border-bottom: 1px solid #f1f5f9 !important;
+            margin: 0 !important;
+            transform: none !important;
+        }
     </style>
 </head>
 
 <body class="bg-gray-50 text-gray-800 antialiased">
 
-    <header class="sticky top-0 z-50 bg-white shadow-sm">
+    <header id="mainHeader"
+        style="position: fixed !important; top: 0px !important; left: 0px !important; right: 0px !important; width: 100% !important; z-index: 99999 !important; background-color: rgba(255, 255, 255, 0.98) !important; backdrop-filter: blur(10px) !important; -webkit-backdrop-filter: blur(10px) !important; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08) !important; border-bottom: 1px solid #f1f5f9 !important; margin: 0 !important; transform: none !important;"
+        class="sticky-nav fixed top-0 left-0 right-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100">
         <nav class="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8">
             <div class="flex items-center gap-x-2">
                 <img src="{{ asset('images/logo.jpg') }}" alt="Logo Gajah Depa Akuatik"
                     class="h-10 w-10 rounded-full object-cover shadow-sm">
                 <span class="text-xl font-bold tracking-tight text-[#008cc9]">Gajah Depa Akuatik</span>
             </div>
-            <div class="hidden md:flex md:gap-x-12">
+            <div class="hidden md:flex md:gap-x-8 lg:gap-x-10">
+                <a href="#keunggulan"
+                    class="text-sm font-medium text-gray-600 hover:text-[#008cc9] transition">Keunggulan</a>
+                <a href="#galeri" class="text-sm font-medium text-gray-600 hover:text-[#008cc9] transition">Galeri</a>
                 <a href="#pelatih" class="text-sm font-medium text-gray-600 hover:text-[#008cc9] transition">Pelatih</a>
                 <a href="#cabang" class="text-sm font-medium text-gray-600 hover:text-[#008cc9] transition">Cabang</a>
                 <a href="#program" class="text-sm font-medium text-gray-600 hover:text-[#008cc9] transition">Program</a>
@@ -42,46 +67,91 @@
     </header>
 
     <section
-        class="relative bg-gradient-to-b from-[#00b4db] to-[#0083b0] min-h-screen flex flex-col justify-center items-center text-center text-white px-6 pt-24 pb-36 sm:pb-44">
+        class="relative min-h-[92vh] flex flex-col justify-center items-center text-white px-6 pt-28 pb-36 sm:pt-32 sm:pb-44 overflow-hidden"
+        style="background: linear-gradient(135deg, rgba(0, 165, 236, 0.92) 0%, rgba(0, 110, 160, 0.95) 100%), url('https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;">
 
+        <!-- Subtle Water Light Texture Overlay -->
         <div
-            class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]">
+            class="absolute inset-0 opacity-15 bg-[radial-gradient(#fff_1.5px,transparent_1.5px)] [background-size:20px_20px] pointer-events-none">
         </div>
 
-        <div class="relative mx-auto max-w-4xl flex flex-col items-center z-10 w-full transform -translate-y-4">
+        <div class="relative mx-auto max-w-7xl w-full z-10 py-8 lg:py-12">
+            <div class="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
 
-            <div
-                class="mb-8 h-48 w-48 sm:h-52 sm:w-52 rounded-full transition transform hover:scale-105 duration-300 filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.35)]">
-                @if(file_exists(public_path('images/logo.jpg')))
-                    <img src="{{ asset('images/logo.jpg') }}" alt="Logo Gajah Depa"
-                        class="w-full h-full rounded-full object-cover">
-                @else
-                    <div
-                        class="w-full h-full rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 flex flex-col items-center justify-center text-blue-900 p-2 border-2 border-amber-300">
-                        <i class="fa-solid fa-elephant text-5xl mb-2 text-gray-700"></i>
-                        <span class="text-sm font-black tracking-wider leading-none">GAJAH DEPA</span>
-                        <span class="text-[10px] font-bold opacity-80 mt-0.5">SUMEDANG</span>
+                <!-- Kolom Kiri: Logo Resmi Gajah Depa Akuatik -->
+                <div class="lg:col-span-5 relative flex justify-center mb-6 lg:mb-0">
+                    <div class="relative flex items-center justify-center">
+
+                        <!-- Glow effect di belakang logo -->
+                        <div
+                            class="absolute -inset-4 bg-gradient-to-tr from-cyan-300/40 to-sky-400/40 rounded-full blur-2xl opacity-80 pointer-events-none">
+                        </div>
+
+                        <!-- Logo Lingkaran Utama (List Putih Tipis) -->
+                        <div
+                            class="relative w-56 h-56 sm:w-72 sm:h-72 rounded-full border-2 border-white/40 shadow-[0_15px_35px_rgba(0,0,0,0.25)] bg-white overflow-hidden p-0.5 transition-transform duration-500 hover:scale-105">
+                            <img src="{{ asset('images/logo.jpg') }}" alt="Logo Gajah Depa Akuatik"
+                                class="w-full h-full rounded-full object-cover">
+                        </div>
+
                     </div>
-                @endif
-            </div>
+                </div>
 
-            <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight drop-shadow-sm">Gajah Depa Akuatik</h1>
+                <!-- Kolom Kanan: Teks & Aksi Utama -->
+                <div class="lg:col-span-7 text-center lg:text-left">
+                    <div
+                        class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-cyan-100 text-xs sm:text-sm font-semibold mb-6 shadow-sm">
+                        <i class="fa-solid fa-medal text-amber-300"></i>
+                        <span>Club Renang Resmi & Terpercaya</span>
+                    </div>
 
-            <p class="mt-4 sm:mt-6 text-lg sm:text-xl font-medium tracking-wide opacity-95">
-                “Temani Perjalanan Anak Bertumbuh Kembang Melalui Renang”
-            </p>
+                    <h1
+                        class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight drop-shadow-sm leading-tight">
+                        Gajah Depa Akuatik
+                    </h1>
 
-            <p class="mx-auto mt-6 max-w-2xl text-sm md:text-base leading-relaxed text-cyan-50/90">
-                Club Renang Gajah Depa Akuatik berdiri sejak tahun 2021 telah dipercaya oleh lebih dari ribuan orangtua
-                hingga sekarang. Club ini berfokus pada perkembangan potensi anak, pembinaan atlet usia muda dan
-                pembentukan karakter melalui renang dengan pembimbing profesional serta fasilitas terbaik.
-            </p>
+                    <p
+                        class="mt-3 sm:mt-4 text-base sm:text-lg lg:text-xl font-bold tracking-wide text-cyan-100 whitespace-normal lg:whitespace-nowrap">
+                        “Temani Perjalanan Anak Bertumbuh Kembang Melalui Renang”
+                    </p>
 
-            <div class="mt-10">
-                <a href="#daftar"
-                    class="inline-block rounded-xl bg-white px-10 py-4 text-base font-bold text-[#008cc9] shadow-md hover:bg-gray-50 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
-                    Daftar Sekarang
-                </a>
+                    <p class="mt-5 max-w-2xl text-sm sm:text-base leading-relaxed text-cyan-50/95">
+                        Berdiri sejak tahun 2021 dan telah dipercaya oleh ratusan orang tua. Kami berfokus pada
+                        pembinaan potensi anak dari usia balita, pemula, hingga atlet muda dengan pelatih profesional,
+                        metode ramah anak, dan pemantauan perkembangan secara digital.
+                    </p>
+
+                    <div class="mt-8 flex justify-center">
+                        <a href="#daftar"
+                            class="inline-flex items-center justify-center rounded-xl bg-white px-10 py-3.5 text-sm sm:text-base font-bold text-[#008cc9] shadow-lg hover:bg-cyan-50 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
+                            <span>Daftar Sekarang</span>
+                        </a>
+                    </div>
+
+                    <!-- Statistik / Social Proof -->
+                    <div
+                        class="mt-10 pt-8 border-t border-white/20 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-center lg:text-left">
+                        <div>
+                            <div class="text-2xl sm:text-3xl font-extrabold text-white">150+</div>
+                            <div class="text-[11px] sm:text-xs text-cyan-100/80 font-medium mt-0.5">Siswa Terbina</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl sm:text-3xl font-extrabold text-white">10+</div>
+                            <div class="text-[11px] sm:text-xs text-cyan-100/80 font-medium mt-0.5">Pelatih Berlisensi
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-2xl sm:text-3xl font-extrabold text-white">3</div>
+                            <div class="text-[11px] sm:text-xs text-cyan-100/80 font-medium mt-0.5">Cabang Latihan</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl sm:text-3xl font-extrabold text-white">4</div>
+                            <div class="text-[11px] sm:text-xs text-cyan-100/80 font-medium mt-0.5">Tingkatan Kelas
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -101,12 +171,299 @@
         </div>
     </section>
 
-    <!-- Section Profil Pelatih (Sebelum Cabang - 1 Baris Slide Horizontal) -->
-    <section id="pelatih" class="bg-white py-16 px-6 lg:px-8 border-b border-gray-100">
+    <!-- Section Keunggulan Kami (Dengan Foto & Deskripsi Menarik) -->
+    <section id="keunggulan" class="bg-slate-50 py-20 px-6 lg:px-8 border-b border-slate-100">
+        <div class="mx-auto max-w-7xl">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <span
+                    class="inline-block text-xs font-bold uppercase tracking-wider text-[#008cc9] bg-cyan-100/70 px-3.5 py-1.5 rounded-full mb-3">
+                    Mengapa Memilih Kami?
+                </span>
+                <h2 class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                    Keunggulan Gajah Depa Akuatik
+                </h2>
+                <p class="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed">
+                    Kami hadir mendampingi setiap langkah buah hati Anda untuk menguasai keterampilan renang dengan
+                    aman, gembira, dan berprestasi.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <!-- Card 1 -->
+                <div
+                    class="bg-white rounded-[24px] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:border-cyan-300 transition-all duration-300 flex flex-col group">
+                    <div class="relative h-44 overflow-hidden">
+                        <img src="{{ file_exists(public_path('images/menyenangkan.jpeg')) ? asset('images/menyenangkan.jpeg') : (file_exists(public_path('images/menyenangkan.jpg')) ? asset('images/menyenangkan.jpg') : asset('images/menyenangkan.png')) }}"
+                            alt="Metode Ramah Anak" style="object-position: center 60%;"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                        <span
+                            class="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-cyan-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            Ramah Anak
+                        </span>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-cyan-50 text-[#008cc9] flex items-center justify-center -mt-11 mb-3 shadow-md border-2 border-white relative z-10">
+                            <i class="fa-solid fa-face-smile text-base"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900 group-hover:text-[#008cc9] transition">
+                            Metode Menyenangkan
+                        </h3>
+                        <p class="mt-2 text-xs text-slate-500 leading-relaxed">
+                            Belajar renang dengan pendekatan bermain dan psikologi anak, menghilangkan rasa takut air
+                            secara alami dan sabar.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div
+                    class="bg-white rounded-[24px] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:border-cyan-300 transition-all duration-300 flex flex-col group">
+                    <div class="relative h-44 overflow-hidden">
+                        <img src="{{ file_exists(public_path('images/profesional.jpeg')) ? asset('images/profesional.jpeg') : (file_exists(public_path('images/profesional.jpg')) ? asset('images/profesional.jpg') : asset('images/profesional.png')) }}"
+                            alt="Pelatih Bersertifikat"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                        <span
+                            class="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-cyan-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            Profesional
+                        </span>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-cyan-50 text-[#008cc9] flex items-center justify-center -mt-11 mb-3 shadow-md border-2 border-white relative z-10">
+                            <i class="fa-solid fa-certificate text-base"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900 group-hover:text-[#008cc9] transition">
+                            Pelatih Berlisensi
+                        </h3>
+                        <p class="mt-2 text-xs text-slate-500 leading-relaxed">
+                            Dibimbing oleh pelatih-pelatih bersertifikasi resmi, berlatar belakang pendidikan olahraga
+                            dan perenang berpengalaman.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div
+                    class="bg-white rounded-[24px] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:border-cyan-300 transition-all duration-300 flex flex-col group">
+                    <div class="relative h-44 overflow-hidden">
+                        <img src="{{ file_exists(public_path('images/higienis.jpeg')) ? asset('images/higienis.jpeg') : (file_exists(public_path('images/higienis.jpg')) ? asset('images/higienis.jpg') : asset('images/higienis.png')) }}"
+                            alt="Fasilitas Kolam Terawat"
+                            style="object-position: center top;"
+                            class="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                        <span
+                            class="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-cyan-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            Standar Aman
+                        </span>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-cyan-50 text-[#008cc9] flex items-center justify-center -mt-11 mb-3 shadow-md border-2 border-white relative z-10">
+                            <i class="fa-solid fa-water-ladder text-base"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900 group-hover:text-[#008cc9] transition">
+                            Fasilitas Kolam Higienis
+                        </h3>
+                        <p class="mt-2 text-xs text-slate-500 leading-relaxed">
+                            Kualitas air bersih, kedalaman terstandar, dan keselamatan selalu diprioritaskan di setiap
+                            cabang latihan.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div
+                    class="bg-white rounded-[24px] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:border-cyan-300 transition-all duration-300 flex flex-col group">
+                    <div class="relative h-44 overflow-hidden">
+                        <img src="{{ file_exists(public_path('images/nilai.jpeg')) ? asset('images/nilai.jpeg') : (file_exists(public_path('images/nilai.jpg')) ? asset('images/nilai.jpg') : asset('images/nilai.png')) }}"
+                            alt="Raport & Evaluasi Digital"
+                            style="object-position: center bottom;"
+                            class="w-full h-full object-cover object-bottom group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
+                        <span
+                            class="absolute top-3 left-3 bg-white/90 backdrop-blur-md text-cyan-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            Transparan
+                        </span>
+                    </div>
+                    <div class="p-6 flex-1 flex flex-col">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-cyan-50 text-[#008cc9] flex items-center justify-center -mt-11 mb-3 shadow-md border-2 border-white relative z-10">
+                            <i class="fa-solid fa-chart-line text-base"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900 group-hover:text-[#008cc9] transition">
+                            Pantau Nilai & Absensi
+                        </h3>
+                        <p class="mt-2 text-xs text-slate-500 leading-relaxed">
+                            Orang tua memiliki dashboard khusus untuk memantau presensi dan grafik perkembangan anak.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Galeri & Dokumentasi Kegiatan (Foto-Foto Kegiatan Menarik) -->
+    <section id="galeri" class="bg-white py-20 px-6 lg:px-8 border-b border-slate-100">
+        <div class="mx-auto max-w-7xl">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <span
+                    class="inline-block text-xs font-bold uppercase tracking-wider text-[#008cc9] bg-cyan-100/70 px-3.5 py-1.5 rounded-full mb-3">
+                    Dokumentasi
+                </span>
+                <h2 class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+                    Galeri Kegiatan Siswa
+                </h2>
+                <p class="mt-2 text-sm sm:text-base text-slate-500">
+                    Suasana seru latihan, pengenalan air, dan pembinaan teknik renang di Gajah Depa Akuatik.
+                </p>
+            </div>
+
+            <!-- Grid Foto Galeri -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Galeri 1 -->
+                <div
+                    class="group relative rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 bg-slate-100 border border-slate-100">
+                    <div class="h-64 sm:h-72 overflow-hidden">
+                        <img src="{{ file_exists(public_path('images/pemula.jpeg')) ? asset('images/pemula.jpeg') : (file_exists(public_path('images/pemula.jpg')) ? asset('images/pemula.jpg') : asset('images/pemula.png')) }}"
+                            alt="Pengenalan Air Usia Dini"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
+                        <span
+                            class="inline-block self-start text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-400/20 backdrop-blur-md px-2.5 py-0.5 rounded-full mb-2 border border-amber-300/30">
+                            Kelas Pemula
+                        </span>
+                        <h4 class="text-base font-bold text-white leading-snug">Pengenalan Air Ceria</h4>
+                        <p class="text-xs text-slate-300 mt-1 line-clamp-2">Latihan motorik dan adaptasi air dengan
+                            suasana riang serta dampingan penuh pelatih.</p>
+                    </div>
+                </div>
+
+                <!-- Galeri 2 -->
+                <div
+                    class="group relative rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 bg-slate-100 border border-slate-100">
+                    <div class="h-64 sm:h-72 overflow-hidden">
+                        <img src="{{ file_exists(public_path('images/teknik.jpeg')) ? asset('images/teknik.jpeg') : (file_exists(public_path('images/teknik.jpg')) ? asset('images/teknik.jpg') : asset('images/teknik.png')) }}"
+                            alt="Koreksi Teknik Renang"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
+                        <span
+                            class="inline-block self-start text-[10px] font-bold uppercase tracking-wider text-cyan-300 bg-cyan-400/20 backdrop-blur-md px-2.5 py-0.5 rounded-full mb-2 border border-cyan-300/30">
+                            Teknik 4 Gaya
+                        </span>
+                        <h4 class="text-base font-bold text-white leading-snug">Penguasaan Gaya Renang</h4>
+                        <p class="text-xs text-slate-300 mt-1 line-clamp-2">Fokus pada kayuhan efektif, streamline
+                            tubuh, dan efisiensi tarikan napas.</p>
+                    </div>
+                </div>
+
+                <!-- Galeri 3 -->
+                <div
+                    class="group relative rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 bg-slate-100 border border-slate-100">
+                    <div class="h-64 sm:h-72 overflow-hidden">
+                        <img src="{{ file_exists(public_path('images/atelet.jpeg')) ? asset('images/atelet.jpeg') : (file_exists(public_path('images/atelet.jpg')) ? asset('images/atelet.jpg') : asset('images/atelet.png')) }}"
+                            alt="Pembinaan Atlet Muda"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
+                        <span
+                            class="inline-block self-start text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-400/20 backdrop-blur-md px-2.5 py-0.5 rounded-full mb-2 border border-emerald-300/30">
+                            Jalur Prestasi
+                        </span>
+                        <h4 class="text-base font-bold text-white leading-snug">Pembinaan Atlet Muda</h4>
+                        <p class="text-xs text-slate-300 mt-1 line-clamp-2">Program latihan intensif untuk persiapan
+                            kejuaraan renang antarpelajar dan daerah.</p>
+                    </div>
+                </div>
+
+                <!-- Galeri 4 -->
+                <div
+                    class="group relative rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 bg-slate-100 border border-slate-100">
+                    <div class="h-64 sm:h-72 overflow-hidden">
+                        <img src="{{ file_exists(public_path('images/higienis.jpeg')) ? asset('images/higienis.jpeg') : (file_exists(public_path('images/higienis.jpg')) ? asset('images/higienis.jpg') : asset('images/higienis.png')) }}"
+                            alt="Fasilitas Kolam Renang Bersih"
+                            style="object-position: center top; transform: scale(1.18); transform-origin: center top;"
+                            class="w-full h-full object-cover object-top group-hover:scale-125 transition-transform duration-700">
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
+                        <span
+                            class="inline-block self-start text-[10px] font-bold uppercase tracking-wider text-sky-300 bg-sky-400/20 backdrop-blur-md px-2.5 py-0.5 rounded-full mb-2 border border-sky-300/30">
+                            Fasilitas
+                        </span>
+                        <h4 class="text-base font-bold text-white leading-snug">Kolam Renang Nyaman & Jernih</h4>
+                        <p class="text-xs text-slate-300 mt-1 line-clamp-2">Sirkulasi air terawat dengan baik menjamin
+                            kenyamanan anak saat berenang berjam-jam.</p>
+                    </div>
+                </div>
+
+                <!-- Galeri 5 -->
+                <div
+                    class="group relative rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 bg-slate-100 border border-slate-100">
+                    <div class="h-64 sm:h-72 overflow-hidden">
+                        <img src="{{ file_exists(public_path('images/safety.jpeg')) ? asset('images/safety.jpeg') : (file_exists(public_path('images/safety.jpg')) ? asset('images/safety.jpg') : asset('images/safety.png')) }}"
+                            alt="Water Safety & Ketahanan Air"
+                            style="object-position: center 85%; transform: scale(1.35); transform-origin: center 85%;"
+                            class="w-full h-full object-cover group-hover:scale-145 transition-transform duration-700">
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
+                        <span
+                            class="inline-block self-start text-[10px] font-bold uppercase tracking-wider text-indigo-300 bg-indigo-400/20 backdrop-blur-md px-2.5 py-0.5 rounded-full mb-2 border border-indigo-300/30">
+                            Water Safety
+                        </span>
+                        <h4 class="text-base font-bold text-white leading-snug">Keterampilan Bertahan di Air</h4>
+                        <p class="text-xs text-slate-300 mt-1 line-clamp-2">Edukasi menyelamatkan diri (water safety
+                            skills) sebagai proteksi utama anak.</p>
+                    </div>
+                </div>
+
+                <!-- Galeri 6 -->
+                <div
+                    class="group relative rounded-[24px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 bg-slate-100 border border-slate-100">
+                    <div class="h-64 sm:h-72 overflow-hidden">
+                        <img src="{{ file_exists(public_path('images/sahabat.jpeg')) ? asset('images/sahabat.jpeg') : (file_exists(public_path('images/sahabat.jpg')) ? asset('images/sahabat.jpg') : asset('images/sahabat.png')) }}"
+                            alt="Kekompakan & Sesi Latihan Bersama"
+                            style="object-position: center bottom; transform: scale(1.1); transform-origin: center bottom;"
+                            class="w-full h-full object-cover object-bottom group-hover:scale-120 transition-transform duration-700">
+                    </div>
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
+                        <span
+                            class="inline-block self-start text-[10px] font-bold uppercase tracking-wider text-pink-300 bg-pink-400/20 backdrop-blur-md px-2.5 py-0.5 rounded-full mb-2 border border-pink-300/30">
+                            Kebersamaan
+                        </span>
+                        <h4 class="text-base font-bold text-white leading-snug">Komunitas Positif & Sahabat Baru</h4>
+                        <p class="text-xs text-slate-300 mt-1 line-clamp-2">Membangun sportivitas, mental tangguh, dan
+                            pertemanan sehat antar-sesama siswa.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Profil Pelatih (1 Baris Slide Horizontal) -->
+    <section id="pelatih" class="bg-slate-50 py-16 px-6 lg:px-8 border-b border-gray-100">
         <div class="mx-auto max-w-7xl relative">
             <div class="text-center mb-10">
+                <span
+                    class="inline-block text-xs font-bold uppercase tracking-wider text-[#008cc9] bg-cyan-100/70 px-3.5 py-1.5 rounded-full mb-3">
+                    Instruktur Profesional
+                </span>
                 <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Profil Pelatih</h2>
-                <p class="mt-3 text-lg text-gray-500">Pelatih berpengalaman dan bersertifikasi di Gajah Depa Akuatik</p>
+                <p class="mt-2 text-sm sm:text-base text-gray-500">Pelatih berpengalaman dan bersertifikasi di Gajah
+                    Depa Akuatik</p>
             </div>
 
             <div class="relative group/slider">
@@ -167,21 +524,62 @@
 
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             @foreach($data_cabang as $cabang)
-                <div onclick="selectBranch('{{ $cabang->id }}', '{{ $cabang->nama }}')"
-                    class="cursor-pointer rounded-[24px] bg-white p-6 sm:p-7 shadow-sm border border-cyan-100 hover:border-cyan-400 hover:shadow-lg transition-all duration-300 flex flex-col justify-between group relative overflow-hidden text-center">
+                @php
+                    $namaCabangLower = strtolower($cabang->nama);
+                    $fotoCabang = null;
 
-                    <div class="flex-1 flex flex-col items-center text-center">
-                        <!-- Header Card Cabang -->
-                        <div class="mb-5 flex flex-col items-center">
-                            <span
-                                class="inline-block text-[11px] font-bold uppercase tracking-wider text-cyan-700 bg-cyan-50 px-3 py-1 rounded-full border border-cyan-100 mb-2.5">
-                                Cabang #{{ $cabang->id }}
-                            </span>
-                            <h3
-                                class="text-xl font-bold text-slate-800 group-hover:text-[#008cc9] tracking-tight transition">
+                    if (str_contains($namaCabangLower, 'darmaraja')) {
+                        if (file_exists(public_path('images/darmaraja.jpeg'))) {
+                            $fotoCabang = asset('images/darmaraja.jpeg');
+                        } elseif (file_exists(public_path('images/darmaraja.jpg'))) {
+                            $fotoCabang = asset('images/darmaraja.jpg');
+                        } elseif (file_exists(public_path('images/darmaraja.png'))) {
+                            $fotoCabang = asset('images/darmaraja.png');
+                        }
+                    } elseif (str_contains($namaCabangLower, 'cimanggung')) {
+                        if (file_exists(public_path('images/cimanggung.jpg'))) {
+                            $fotoCabang = asset('images/cimanggung.jpg');
+                        } elseif (file_exists(public_path('images/cimanggung.jpeg'))) {
+                            $fotoCabang = asset('images/cimanggung.jpeg');
+                        } elseif (file_exists(public_path('images/cimanggung.png'))) {
+                            $fotoCabang = asset('images/cimanggung.png');
+                        }
+                    } elseif (str_contains($namaCabangLower, 'sumedang')) {
+                        if (file_exists(public_path('images/sumedang.jpeg'))) {
+                            $fotoCabang = asset('images/sumedang.jpeg');
+                        } elseif (file_exists(public_path('images/sumedang.jpg'))) {
+                            $fotoCabang = asset('images/sumedang.jpg');
+                        } elseif (file_exists(public_path('images/sumedang.png'))) {
+                            $fotoCabang = asset('images/sumedang.png');
+                        }
+                    }
+
+                    if (!$fotoCabang) {
+                        $fotoCabang = 'https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?auto=format&fit=crop&w=600&q=80';
+                    }
+                @endphp
+                <div onclick="selectBranch('{{ $cabang->id }}', '{{ $cabang->nama }}')"
+                    class="cursor-pointer rounded-[24px] bg-white shadow-sm border border-cyan-100 hover:border-cyan-400 hover:shadow-xl transition-all duration-300 flex flex-col justify-between group relative overflow-hidden text-center">
+
+                    <!-- Foto Kolam Cabang -->
+                    <div class="relative h-48 w-full overflow-hidden">
+                        <img src="{{ $fotoCabang }}" alt="{{ $cabang->nama }}"
+                            style="{{ str_contains($namaCabangLower, 'darmaraja') ? 'object-position: center bottom;' : (str_contains($namaCabangLower, 'sumedang') ? 'object-position: center 60%;' : 'object-position: center center;') }}"
+                            class="w-full h-full object-cover {{ str_contains($namaCabangLower, 'darmaraja') ? 'object-bottom' : 'object-center' }} group-hover:scale-108 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/25 to-transparent">
+                        </div>
+                        <span
+                            class="absolute top-3 left-3 text-[11px] font-bold uppercase tracking-wider text-cyan-800 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full border border-white/60 shadow-sm">
+                            Cabang #{{ $cabang->id }}
+                        </span>
+                        <div class="absolute bottom-3 left-4 right-4 text-left">
+                            <h3 class="text-lg font-bold text-white drop-shadow-sm group-hover:text-cyan-200 transition">
                                 {{ $cabang->nama }}
                             </h3>
                         </div>
+                    </div>
+
+                    <div class="p-6 flex-1 flex flex-col items-center text-center">
 
                         <!-- Alamat / Lokasi Kolam -->
                         <div class="text-xs sm:text-sm text-slate-700 mb-4 leading-relaxed w-full">
@@ -435,97 +833,106 @@
                                         </ul>
                                     </div>
                                 @elseif($isLanjutanOrSeniorSumedang)
-                                    {{-- Khusus Kelas Lanjutan & Senior Cabang 1: Pilihan Paket 12 / 16 Pertemuan --}}
-                                    <div class="rounded-2xl bg-cyan-50/70 p-3.5 border border-cyan-100">
-                                        <div class="flex items-center justify-between mb-2">
-                                            <span
-                                                class="block text-[11px] font-bold text-cyan-900 uppercase tracking-wider flex items-center gap-1.5">
-                                                <i class="fa-solid fa-layer-group text-cyan-600"></i>
-                                                Pilihan Paket:
-                                            </span>
-                                            <span
-                                                class="text-[10px] text-cyan-700 font-semibold lowercase bg-cyan-100 px-2 py-0.5 rounded-full">pertemuan / sesi</span>
-                                        </div>
+                                                    {{-- Khusus Kelas Lanjutan & Senior Cabang 1: Pilihan Paket 12 / 16 Pertemuan --}}
+                                                    <div class="rounded-2xl bg-cyan-50/70 p-3.5 border border-cyan-100">
+                                                        <div class="flex items-center justify-between mb-2">
+                                                            <span
+                                                                class="block text-[11px] font-bold text-cyan-900 uppercase tracking-wider flex items-center gap-1.5">
+                                                                <i class="fa-solid fa-layer-group text-cyan-600"></i>
+                                                                Pilihan Paket:
+                                                            </span>
+                                                            <span
+                                                                class="text-[10px] text-cyan-700 font-semibold lowercase bg-cyan-100 px-2 py-0.5 rounded-full">pertemuan
+                                                                / sesi</span>
+                                                        </div>
 
-                                        {{-- Tab Tombol Pilihan Sesi (12 & 16 Pertemuan) --}}
-                                        <div
-                                            class="grid grid-cols-2 gap-1.5 p-1 bg-white/90 rounded-xl border border-cyan-200/60 shadow-2xs">
-                                            <button type="button"
-                                                onclick="setLanjutanSeniorPackage({{ $kelas->id }}, '180000', '{{ $activePillColor }}')"
-                                                id="btn-pkg-{{ $kelas->id }}-180000"
-                                                class="pkg-pill-btn-{{ $kelas->id }} py-2 px-1.5 rounded-lg text-xs sm:text-sm font-extrabold transition-all duration-200 text-center {{ $activePillColor }} text-white shadow-xs">
-                                                12
-                                            </button>
-                                            <button type="button"
-                                                onclick="setLanjutanSeniorPackage({{ $kelas->id }}, '250000', '{{ $activePillColor }}')"
-                                                id="btn-pkg-{{ $kelas->id }}-250000"
-                                                class="pkg-pill-btn-{{ $kelas->id }} py-2 px-1.5 rounded-lg text-xs sm:text-sm font-extrabold transition-all duration-200 text-center text-slate-600 hover:bg-cyan-50 hover:text-cyan-800">
-                                                16
-                                            </button>
-                                        </div>
+                                                        {{-- Tab Tombol Pilihan Sesi (12 & 16 Pertemuan) --}}
+                                                        <div
+                                                            class="grid grid-cols-2 gap-1.5 p-1 bg-white/90 rounded-xl border border-cyan-200/60 shadow-2xs">
+                                                            <button type="button"
+                                                                onclick="setLanjutanSeniorPackage({{ $kelas->id }}, '180000', '{{ $activePillColor }}')"
+                                                                id="btn-pkg-{{ $kelas->id }}-180000"
+                                                                class="pkg-pill-btn-{{ $kelas->id }} py-2 px-1.5 rounded-lg text-xs sm:text-sm font-extrabold transition-all duration-200 text-center {{ $activePillColor }} text-white shadow-xs">
+                                                                12
+                                                            </button>
+                                                            <button type="button"
+                                                                onclick="setLanjutanSeniorPackage({{ $kelas->id }}, '250000', '{{ $activePillColor }}')"
+                                                                id="btn-pkg-{{ $kelas->id }}-250000"
+                                                                class="pkg-pill-btn-{{ $kelas->id }} py-2 px-1.5 rounded-lg text-xs sm:text-sm font-extrabold transition-all duration-200 text-center text-slate-600 hover:bg-cyan-50 hover:text-cyan-800">
+                                                                16
+                                                            </button>
+                                                        </div>
 
-                                        {{-- Hidden select untuk sinkronisasi form pendaftaran --}}
-                                        <select id="package-select-{{ $kelas->id }}" class="hidden">
-                                            <option value="180000" selected>12 Pertemuan / bulan</option>
-                                            <option value="250000">16 Pertemuan / bulan</option>
-                                        </select>
-                                    </div>
+                                                        {{-- Hidden select untuk sinkronisasi form pendaftaran --}}
+                                                        <select id="package-select-{{ $kelas->id }}" class="hidden">
+                                                            <option value="180000" selected>12 Pertemuan / bulan</option>
+                                                            <option value="250000">16 Pertemuan / bulan</option>
+                                                        </select>
+                                                    </div>
 
-                                    {{-- Deskripsi Program Secara General --}}
-                                    <div class="rounded-2xl bg-sky-50/70 border border-sky-100/90 p-3.5 shadow-2xs">
-                                        <p id="desc-display-{{ $kelas->id }}"
-                                            class="text-xs text-slate-600 leading-relaxed font-medium">
-                                            {{ $isLanjutan
-                                                ? 'Penyempurnaan 4 teknik gaya renang, efisiensi kayuhan dan napas, serta penguatan stamina untuk persiapan perlombaan'
-                                                : 'Penajaman kecepatan 4 gaya, efisiensi teknik start dan pembalikan, serta pembentukan daya tahan atlet untuk mencetak limit waktu terbaik' }}
-                                        </p>
-                                    </div>
+                                                    {{-- Deskripsi Program Secara General --}}
+                                                    <div class="rounded-2xl bg-sky-50/70 border border-sky-100/90 p-3.5 shadow-2xs">
+                                                        <p id="desc-display-{{ $kelas->id }}"
+                                                            class="text-xs text-slate-600 leading-relaxed font-medium">
+                                                            {{ $isLanjutan
+                                    ? 'Penyempurnaan 4 teknik gaya renang, efisiensi kayuhan dan napas, serta penguatan stamina untuk persiapan perlombaan'
+                                    : 'Penajaman kecepatan 4 gaya, efisiensi teknik start dan pembalikan, serta pembentukan daya tahan atlet untuk mencetak limit waktu terbaik' }}
+                                                        </p>
+                                                    </div>
 
-                                    {{-- Info untuk Pertemuan yang Dipilih --}}
-                                    <div class="border-t border-gray-100 pt-3">
-                                        <div class="flex items-center justify-between mb-2.5">
-                                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                                                Jadwal & Info Latihan:
-                                            </span>
-                                            <span id="badge-sesi-{{ $kelas->id }}"
-                                                class="text-[10px] font-extrabold text-[#0083b0] bg-cyan-50 border-cyan-100 px-2 py-0.5 rounded-full border">
-                                                12 Pertemuan / bulan
-                                            </span>
-                                        </div>
-                                        <ul id="perks-display-{{ $kelas->id }}" class="space-y-2.5 text-xs sm:text-[13px] text-gray-600 transition-opacity duration-200">
-                                            <li class="flex items-start gap-x-2.5 leading-tight">
-                                                <i class="fa-solid fa-calendar-check text-indigo-500 mt-0.5 text-xs flex-shrink-0"></i>
-                                                <span class="text-slate-700 font-semibold">12 Pertemuan / bulan</span>
-                                            </li>
-                                            <li class="flex items-start gap-x-2.5 leading-tight">
-                                                <i class="fa-solid fa-location-dot text-cyan-500 mt-0.5 text-xs flex-shrink-0"></i>
-                                                <span class="text-slate-700">
-                                                    <strong>Selasa, Kamis & Sabtu:</strong> Kolam Renang Hanjuang Hegar
-                                                    <span class="text-slate-500 block text-[11px] mt-0.5 font-normal">
-                                                        <i class="fa-regular fa-clock text-amber-500 mr-1"></i>Jam 16.00 WIB (Durasi 90–120 Menit)
-                                                    </span>
-                                                </span>
-                                            </li>
-                                            <li class="flex items-start gap-x-2.5 leading-tight">
-                                                <i class="fa-solid fa-location-dot text-cyan-500 mt-0.5 text-xs flex-shrink-0"></i>
-                                                <span class="text-slate-700">
-                                                    <strong>Minggu:</strong> Kolam Renang Tirta Mas Kiansantang
-                                                    <span class="text-slate-500 block text-[11px] mt-0.5 font-normal">
-                                                        <i class="fa-regular fa-clock text-amber-500 mr-1"></i>Jam 14.00 WIB (Durasi 90–120 Menit)
-                                                    </span>
-                                                </span>
-                                            </li>
-                                            <li class="flex items-start gap-x-2.5 leading-tight">
-                                                <i class="fa-solid fa-person-running text-emerald-500 mt-0.5 text-xs flex-shrink-0"></i>
-                                                <span class="text-slate-700">
-                                                    <strong>Jumat:</strong> Lapang IPP Sumedang (Dryland)
-                                                    <span class="text-slate-500 block text-[11px] mt-0.5 font-normal">
-                                                        <i class="fa-regular fa-clock text-amber-500 mr-1"></i>Jam 16.00 WIB (Durasi 60 Menit)
-                                                    </span>
-                                                </span>
-                                            </li>
-                                        </ul>
-                                    </div>
+                                                    {{-- Info untuk Pertemuan yang Dipilih --}}
+                                                    <div class="border-t border-gray-100 pt-3">
+                                                        <div class="flex items-center justify-between mb-2.5">
+                                                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                                                Jadwal & Info Latihan:
+                                                            </span>
+                                                            <span id="badge-sesi-{{ $kelas->id }}"
+                                                                class="text-[10px] font-extrabold text-[#0083b0] bg-cyan-50 border-cyan-100 px-2 py-0.5 rounded-full border">
+                                                                12 Pertemuan / bulan
+                                                            </span>
+                                                        </div>
+                                                        <ul id="perks-display-{{ $kelas->id }}"
+                                                            class="space-y-2.5 text-xs sm:text-[13px] text-gray-600 transition-opacity duration-200">
+                                                            <li class="flex items-start gap-x-2.5 leading-tight">
+                                                                <i
+                                                                    class="fa-solid fa-calendar-check text-indigo-500 mt-0.5 text-xs flex-shrink-0"></i>
+                                                                <span class="text-slate-700 font-semibold">12 Pertemuan / bulan</span>
+                                                            </li>
+                                                            <li class="flex items-start gap-x-2.5 leading-tight">
+                                                                <i
+                                                                    class="fa-solid fa-location-dot text-cyan-500 mt-0.5 text-xs flex-shrink-0"></i>
+                                                                <span class="text-slate-700">
+                                                                    <strong>Selasa, Kamis & Sabtu:</strong> Kolam Renang Hanjuang Hegar
+                                                                    <span class="text-slate-500 block text-[11px] mt-0.5 font-normal">
+                                                                        <i class="fa-regular fa-clock text-amber-500 mr-1"></i>Jam 16.00 WIB
+                                                                        (Durasi 90–120 Menit)
+                                                                    </span>
+                                                                </span>
+                                                            </li>
+                                                            <li class="flex items-start gap-x-2.5 leading-tight">
+                                                                <i
+                                                                    class="fa-solid fa-location-dot text-cyan-500 mt-0.5 text-xs flex-shrink-0"></i>
+                                                                <span class="text-slate-700">
+                                                                    <strong>Minggu:</strong> Kolam Renang Tirta Mas Kiansantang
+                                                                    <span class="text-slate-500 block text-[11px] mt-0.5 font-normal">
+                                                                        <i class="fa-regular fa-clock text-amber-500 mr-1"></i>Jam 14.00 WIB
+                                                                        (Durasi 90–120 Menit)
+                                                                    </span>
+                                                                </span>
+                                                            </li>
+                                                            <li class="flex items-start gap-x-2.5 leading-tight">
+                                                                <i
+                                                                    class="fa-solid fa-person-running text-emerald-500 mt-0.5 text-xs flex-shrink-0"></i>
+                                                                <span class="text-slate-700">
+                                                                    <strong>Jumat:</strong> Lapang IPP Sumedang (Dryland)
+                                                                    <span class="text-slate-500 block text-[11px] mt-0.5 font-normal">
+                                                                        <i class="fa-regular fa-clock text-amber-500 mr-1"></i>Jam 16.00 WIB
+                                                                        (Durasi 60 Menit)
+                                                                    </span>
+                                                                </span>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
                                 @elseif($isDarmaraja)
                                     {{-- Khusus Cabang 2: SSC Gajah Depa Darmaraja --}}
 
@@ -864,12 +1271,10 @@
                                         class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 font-bold text-sm pointer-events-none">
                                         <i class="fa-brands fa-whatsapp text-green-500 mr-1"></i> +62
                                     </span>
-                                    <input type="tel" name="no_hp" required value="{{ preg_replace('/^(\+?62|0)/', '', old('no_hp', '')) }}"
-                                        placeholder="8123456789"
-                                        id="input_no_hp"
-                                        oninput="cleanWhatsAppNumber(this)"
-                                        onpaste="setTimeout(() => cleanWhatsAppNumber(this), 10)"
-                                        maxlength="13"
+                                    <input type="tel" name="no_hp" required
+                                        value="{{ preg_replace('/^(\+?62|0)/', '', old('no_hp', '')) }}"
+                                        placeholder="8123456789" id="input_no_hp" oninput="cleanWhatsAppNumber(this)"
+                                        onpaste="setTimeout(() => cleanWhatsAppNumber(this), 10)" maxlength="13"
                                         class="w-full rounded-xl border border-transparent bg-[#f1f5f9] py-3.5 pr-3.5 pl-16 text-sm font-medium text-slate-700 placeholder-slate-400 focus:border-cyan-400 focus:bg-white focus:outline-none transition-all duration-200">
                                 </div>
                             </div>
@@ -1041,41 +1446,8 @@
                         </div>
                     </div>
 
-                    {{-- SEKSI 5: SURAT PERJANJIAN --}}
-                    <div class="pt-2">
-                        <label class="text-sm font-bold text-slate-800">Upload Surat Perjanjian</label>
-                        <div
-                            class="mt-2 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-[#f8fafc] px-6 py-6 text-center cursor-pointer relative hover:border-cyan-400 transition group min-h-[140px]">
-                            <input type="file" id="perjanjian-input" name="surat_perjanjian" accept=".pdf,.jpg,.jpeg,.png"
-                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
-                            <div id="perjanjian-placeholder"
-                                class="flex flex-col items-center justify-center z-10 transition duration-200">
-                                <i
-                                    class="fa-solid fa-file-signature text-3xl text-gray-400 mb-2 group-hover:text-cyan-500 transition"></i>
-                                <p class="text-sm font-bold text-slate-700 group-hover:text-cyan-600 transition">Klik untuk
-                                    upload surat perjanjian</p>
-                                <p class="text-xs text-gray-400 mt-1">Format: PDF, JPG, PNG (Max. 5MB)</p>
-                            </div>
-                            <div id="perjanjian-preview"
-                                class="hidden flex flex-col items-center justify-center z-10 w-full p-2">
-                                <div
-                                    class="flex items-center gap-3 bg-white border border-gray-100 rounded-xl px-5 py-3 shadow-sm">
-                                    <i class="fa-solid fa-file-lines text-2xl text-cyan-500"></i>
-                                    <div class="text-left">
-                                        <p id="perjanjian-filename"
-                                            class="text-sm font-bold text-slate-700 truncate max-w-[200px]">nama-file.pdf
-                                        </p>
-                                        <p class="text-xs text-emerald-600 font-semibold mt-0.5"><i
-                                                class="fa-solid fa-circle-check mr-1"></i>File terpilih (klik untuk ganti)
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <button type="submit"
-                        class="w-full rounded-2xl bg-[#008cc9] py-4 text-center text-base font-bold text-white shadow-md hover:bg-cyan-600 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-x-2">
+                        class="w-full rounded-2xl bg-[#008cc9] py-4 text-center text-base font-bold text-white shadow-md hover:bg-cyan-600 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-x-2 mt-2">
                         <i class="fa-regular fa-paper-plane"></i> Kirim Pendaftaran
                     </button>
                 </form>
@@ -1181,9 +1553,9 @@
             const noHpInput = document.getElementById('input_no_hp');
             if (noHpInput) {
                 cleanWhatsAppNumber(noHpInput);
-                noHpInput.addEventListener('input', function() { cleanWhatsAppNumber(this); });
-                noHpInput.addEventListener('paste', function() { setTimeout(() => cleanWhatsAppNumber(this), 10); });
-                noHpInput.addEventListener('blur', function() { cleanWhatsAppNumber(this); });
+                noHpInput.addEventListener('input', function () { cleanWhatsAppNumber(this); });
+                noHpInput.addEventListener('paste', function () { setTimeout(() => cleanWhatsAppNumber(this), 10); });
+                noHpInput.addEventListener('blur', function () { cleanWhatsAppNumber(this); });
             }
             // --- 1. MENGUNCI CACHE DROPDOWN PROGRAM (JIKA BERUPA SELECT) ---
             const programSelect = document.getElementById('form-program-select');
@@ -1235,19 +1607,6 @@
                             previewContainer.classList.remove('hidden');
                         }
                         reader.readAsDataURL(file);
-                    }
-                });
-            }
-
-            // --- 4. LOGIKA UPLOAD SURAT PERJANJIAN ---
-            const perjanjianInput = document.getElementById('perjanjian-input');
-            if (perjanjianInput) {
-                perjanjianInput.addEventListener('change', function () {
-                    const file = this.files[0];
-                    if (file) {
-                        document.getElementById('perjanjian-filename').textContent = file.name;
-                        document.getElementById('perjanjian-placeholder').classList.add('hidden');
-                        document.getElementById('perjanjian-preview').classList.remove('hidden');
                     }
                 });
             }
