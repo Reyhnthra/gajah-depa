@@ -107,7 +107,8 @@ class AdminSiswaController extends Controller
             )
             ->whereMonth('absensi_siswa.tanggal_kehadiran', $bulan_absensi)
             ->whereYear('absensi_siswa.tanggal_kehadiran', $tahun_absensi)
-            ->orderBy('absensi_siswa.tanggal_kehadiran', 'desc');
+            ->orderBy('absensi_siswa.tanggal_kehadiran', 'desc')
+            ->orderBy('siswa.nama', 'asc');
 
         if ($adminCabang) {
             $query_absensi_sesi->where('siswa.id_cabang', $adminCabang);
@@ -120,16 +121,21 @@ class AdminSiswaController extends Controller
 
         $absensi_sesi_raw = $query_absensi_sesi->get();
 
-        // Group by tanggal untuk tabel monitoring sesi
-        $absensi_per_sesi = $absensi_sesi_raw->groupBy('tanggal_kehadiran')->map(function ($records) {
+        // Group by tanggal dan kelas untuk tabel monitoring sesi
+        $absensi_per_sesi = $absensi_sesi_raw->groupBy(function ($item) {
+            return $item->tanggal_kehadiran . '_' . ($item->id_kelas ?? 0);
+        })->map(function ($records) {
+            $first = $records->first();
             return [
-                'tanggal'   => $records->first()->tanggal_kehadiran,
-                'hadir'     => $records->where('status_kehadiran', 'hadir')->count(),
-                'izin'      => $records->where('status_kehadiran', 'izin')->count(),
-                'sakit'     => $records->where('status_kehadiran', 'sakit')->count(),
+                'tanggal'     => $first->tanggal_kehadiran,
+                'id_kelas'    => $first->id_kelas ?? null,
+                'nama_kelas'  => $first->nama_kelas ?? $first->tingkat_kelas ?? 'Kelas Renang',
+                'hadir'       => $records->where('status_kehadiran', 'hadir')->count(),
+                'izin'        => $records->where('status_kehadiran', 'izin')->count(),
+                'sakit'       => $records->where('status_kehadiran', 'sakit')->count(),
                 'tidak_hadir' => $records->where('status_kehadiran', 'tidak_hadir')->count(),
-                'total'     => $records->count(),
-                'detail'    => $records->values(),
+                'total'       => $records->count(),
+                'detail'      => $records->values(),
             ];
         })->sortByDesc('tanggal')->values();
 
@@ -870,7 +876,7 @@ class AdminSiswaController extends Controller
             'foto.max'                => 'Ukuran foto maksimal 2MB.',
         ]);
 
-        DB::transaction(function () use ($request, $id, $siswa) {
+        DB::transaction(function () use ($request, $id, $siswa, $adminCabang) {
             $namaOrtu = mb_convert_case(trim($request->nama_orang_tua), MB_CASE_TITLE, 'UTF-8');
             $namaSiswa = mb_convert_case(trim($request->nama_siswa), MB_CASE_TITLE, 'UTF-8');
             $tempatLahir = $request->filled('tempat_lahir') ? mb_convert_case(trim($request->tempat_lahir), MB_CASE_TITLE, 'UTF-8') : null;
@@ -957,22 +963,30 @@ class AdminSiswaController extends Controller
                 'nama'             => $namaSiswa,
                 'tempat_lahir'     => $tempatLahir,
                 'tanggal_lahir'    => $request->tanggal_lahir,
-                'jenis_kelamin'    => $request->jenis_kelamin ?? 'laki-laki',
+                'jenis_kelamin'    => $request->jenis_kelamin ?? ($siswa->jenis_kelamin ?? 'laki-laki'),
                 'tingkat_kelas'    => $request->tingkat_kelas,
                 'sekolah'          => $request->sekolah,
-                'riwayat_penyakit' => null,
-                'catatan_khusus'   => null,
+                'riwayat_penyakit' => $request->has('riwayat_penyakit') ? $request->riwayat_penyakit : $siswa->riwayat_penyakit,
+                'catatan_khusus'   => $request->has('catatan_khusus') ? $request->catatan_khusus : $siswa->catatan_khusus,
                 'foto'             => $fotoPath,
                 'updated_at'       => now(),
             ];
 
-            if ($adminCabang) {
-                $siswaUpdateData['id_cabang'] = $adminCabang;
-            } elseif ($request->filled('id_cabang')) {
-                $siswaUpdateData['id_cabang'] = $request->id_cabang;
+            $targetCabang = $adminCabang ?: ($request->filled('id_cabang') ? $request->id_cabang : $siswa->id_cabang);
+            if ($targetCabang) {
+                $siswaUpdateData['id_cabang'] = $targetCabang;
             }
             if ($request->filled('id_kelas')) {
                 $siswaUpdateData['id_kelas'] = $request->id_kelas;
+            } elseif ($request->filled('tingkat_kelas')) {
+                $kelasQuery = DB::table('kelas')->where('nama', 'like', '%' . $request->tingkat_kelas . '%');
+                if ($targetCabang) {
+                    $kelasQuery->where('id_cabang', $targetCabang);
+                }
+                $matchedKelas = $kelasQuery->first();
+                if ($matchedKelas) {
+                    $siswaUpdateData['id_kelas'] = $matchedKelas->id;
+                }
             }
 
             DB::table('siswa')->where('id', $id)->update($siswaUpdateData);

@@ -408,7 +408,7 @@
 
             $tanggalHariIni = (int) date('j');
             $isBukaPemilihan = ($tanggalHariIni >= 25);
-            $canClickCard = (!$isLocked && $isBukaPemilihan);
+            $canClickCard = true; // Admin selalu dapat mengklik kartu untuk melihat detail kandidat atau membatalkan penetapan
         @endphp
 
         <!-- 5 Metric Cards Row (Termasuk Best Member of the Month) -->
@@ -487,7 +487,7 @@
             </div>
 
             <!-- Card 5: Best Member of the Month -->
-            <div @if($canClickCard) onclick="openBestMemberModal()" @endif class="w-[calc(50%-6px)] min-w-[calc(50%-6px)] sm:w-auto sm:min-w-0 shrink-0 snap-start bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-100 border-t-4 border-t-amber-400 relative overflow-hidden flex flex-col justify-between transition-all duration-200 @if($canClickCard) cursor-pointer hover:shadow-md group hover:-translate-y-0.5 @endif" title="{{ $isLocked ? 'Best Member of the Month telah ditetapkan' : ($isBukaPemilihan ? 'Klik untuk memilih Best Member of the Month' : 'Penetapan Best Member dibuka mulai tanggal 25 ' . $namaBulanIni) }}">
+            <div @if($canClickCard) onclick="openBestMemberModal()" @endif class="w-[calc(50%-6px)] min-w-[calc(50%-6px)] sm:w-auto sm:min-w-0 shrink-0 snap-start bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-100 border-t-4 border-t-amber-400 relative overflow-hidden flex flex-col justify-between transition-all duration-200 @if($canClickCard) cursor-pointer hover:shadow-md group hover:-translate-y-0.5 @endif" title="{{ $isLocked ? 'Klik untuk melihat detail atau membatalkan penetapan Best Member' : ($isBukaPemilihan ? 'Klik untuk memilih Best Member of the Month' : 'Klik untuk melihat kandidat Best Member (Penetapan resmi dibuka tgl 25)') }}">
                 <div class="flex items-start justify-between gap-2 mb-3 sm:mb-4">
                     <div>
                         <span class="text-[11px] sm:text-xs font-bold text-slate-800 tracking-wide leading-tight block">Best Member of the Month</span>
@@ -502,8 +502,8 @@
                                 </span>
                             @endif
                         @else
-                            <span class="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
-                                <i class="fa-solid fa-lock text-[9px]"></i> Telah Ditetapkan
+                            <span class="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-0.5 group-hover:text-emerald-700">
+                                <i class="fa-solid fa-lock text-[9px]"></i> Telah Ditetapkan · Kelola
                             </span>
                         @endif
                     </div>
@@ -1170,12 +1170,22 @@
 
                 <!-- Info Box Kriteria / Status Kunci -->
                 @if($isLocked)
-                    <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-3 text-xs text-amber-900">
-                        <i class="fa-solid fa-lock text-amber-600 mt-0.5 text-sm shrink-0"></i>
-                        <div>
-                            <span class="font-bold text-amber-900">Pilihan Telah Terkunci:</span>
-                            Best Member untuk bulan <span class="font-bold">{{ $namaBulanIni }} {{ $tahunIni }}</span> sudah resmi ditetapkan dan tidak dapat diganti lagi selama bulan ini.
+                    <div class="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-900">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-lock text-amber-600 mt-0.5 text-sm shrink-0"></i>
+                            <div>
+                                <span class="font-bold text-amber-900">Pilihan Telah Terkunci:</span>
+                                Best Member untuk bulan <span class="font-bold">{{ $namaBulanIni }} {{ $tahunIni }}</span> sudah resmi ditetapkan.
+                            </div>
                         </div>
+                        <form action="{{ route('admin.best_swimmer.reset') }}" method="POST" class="m-0 shrink-0" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan/mereset penetapan Best Member bulan ini? Status akan kembali menjadi Belum Ditetapkan.')">
+                            @csrf
+                            <input type="hidden" name="tahun" value="{{ $tahunIni }}">
+                            <input type="hidden" name="bulan" value="{{ $bulanIni }}">
+                            <button type="submit" class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer">
+                                <i class="fa-solid fa-arrow-rotate-left"></i> Batalkan Penetapan
+                            </button>
+                        </form>
                     </div>
                 @else
                     <div class="p-3.5 rounded-2xl bg-sky-50 border border-sky-100 flex items-start gap-3 text-xs text-sky-900">

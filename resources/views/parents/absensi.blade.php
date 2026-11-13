@@ -118,12 +118,16 @@
         <!-- Sidebar Footer -->
         <div class="p-4 border-t border-white/10 flex items-center justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
-                <div class="w-10 h-10 rounded-full bg-amber-400 text-amber-900 font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">
-                    {{ strtoupper(substr(Auth::user()->nama ?? 'HR', 0, 2)) }}
+                <div class="w-10 h-10 rounded-full bg-amber-400 text-amber-950 font-bold text-sm flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-amber-300">
+                    @if(!empty($siswa->foto) && file_exists(public_path($siswa->foto)))
+                        <img src="{{ asset($siswa->foto) }}" alt="{{ $siswa->nama ?? 'Foto Anak' }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($siswa->nama ?? (Auth::user()->nama ?? 'AN'), 0, 2)) }}
+                    @endif
                 </div>
                 <div class="truncate">
                     <div class="text-sm font-bold text-white truncate">{{ Auth::user()->nama ?? 'Hendra Rizki' }}</div>
-                    <div class="text-[11px] text-slate-300 truncate">Orang Tua</div>
+                    <div class="text-[11px] text-slate-300 truncate">Orang Tua dari {{ $siswa->nama ?? 'Anak' }}</div>
                 </div>
             </div>
 
@@ -262,8 +266,12 @@
 
             <!-- Top Profile Card Badge (Light Sky Blue Container) -->
             <div class="bg-[#f0f9ff] border border-sky-200/70 rounded-2xl p-4 flex items-center gap-4 mb-6">
-                <div class="w-14 h-14 rounded-full bg-[#00a5ec] text-white font-black text-lg flex items-center justify-center shrink-0 shadow-sm">
-                    {{ strtoupper(substr($siswa->nama ?? 'AR', 0, 2)) }}
+                <div class="w-14 h-14 rounded-full bg-amber-400 text-amber-950 font-black text-lg flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-amber-300">
+                    @if(!empty($siswa->foto) && file_exists(public_path($siswa->foto)))
+                        <img src="{{ asset($siswa->foto) }}" alt="{{ $siswa->nama ?? 'Foto Anak' }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($siswa->nama ?? 'AR', 0, 2)) }}
+                    @endif
                 </div>
                 <div>
                     <div class="flex items-center gap-2">

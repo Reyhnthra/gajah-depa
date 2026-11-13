@@ -750,20 +750,29 @@ class ParentsController extends Controller
                 return $a->id <=> $b->id;
             })->values();
 
-            $bestMember = $rankedKandidat->first();
-        }
+            // Hanya tetapkan Best Member jika SUDAH resmi dipilih oleh Admin di tabel best_swimmer
+            $bestMember = null;
+            if (\Illuminate\Support\Facades\Schema::hasTable('best_swimmer')) {
+                $manualId = DB::table('best_swimmer')
+                    ->where('id_cabang', $siswa->id_cabang ?? 1)
+                    ->where('tahun', (int) $tahun)
+                    ->where('bulan', (int) $bulan)
+                    ->value('id_siswa');
 
-        if (!$bestMember) {
-            $bestMember = (object)[
-                'id'          => $siswa->id ?? 1,
-                'nama'        => $siswa->nama ?? 'Siswa Teladan',
-                'foto'        => $siswa->foto ?? null,
-                'nama_kelas'  => $siswa->nama_kelas ?? 'Pemula A',
-                'nama_cabang' => $namaCabangAktif,
-                'avg_score'   => $avgScoreBulanIni > 0 ? $avgScoreBulanIni : ($lastGrade['score'] ?? 3.7),
-                'progres_pct' => $progresNilaiPersen > 0 ? $progresNilaiPersen : 74,
-                'total_hadir' => $totalHadir,
-            ];
+                if ($manualId) {
+                    $bestMember = $rankedKandidat->firstWhere('id', $manualId);
+                    if (!$bestMember) {
+                        $bestMember = DB::table('siswa')
+                            ->leftJoin('kelas', 'siswa.id_kelas', '=', 'kelas.id')
+                            ->leftJoin('cabang', 'siswa.id_cabang', '=', 'cabang.id')
+                            ->where('siswa.id', $manualId)
+                            ->select('siswa.*', 'kelas.nama as nama_kelas', 'cabang.nama as nama_cabang')
+                            ->first();
+                    }
+                }
+            }
+        } else {
+            $bestMember = null;
         }
 
         $isBestMember = ($bestMember && isset($siswa->id) && (int)$bestMember->id === (int)$siswa->id);
@@ -853,8 +862,11 @@ class ParentsController extends Controller
 
         // Fetch all ratings/achievements recorded for this child
         $penilaianListRaw = DB::table('pencapaian_siswa')
-            ->where('id_siswa', $siswa->id)
-            ->orderBy('tanggal_catat', 'desc')
+            ->leftJoin('pelatih', 'pencapaian_siswa.id_pelatih', '=', 'pelatih.id')
+            ->leftJoin('users as user_pelatih', 'pelatih.id_user', '=', 'user_pelatih.id')
+            ->select('pencapaian_siswa.*', 'user_pelatih.nama as nama_pelatih')
+            ->where('pencapaian_siswa.id_siswa', $siswa->id)
+            ->orderBy('pencapaian_siswa.tanggal_catat', 'desc')
             ->get();
 
         $penilaianList = [];
@@ -865,7 +877,7 @@ class ParentsController extends Controller
                 $penilaianList[] = (object)[
                     'sesi'          => 'Sesi ' . $sesiNum--,
                     'tanggal'       => Carbon::parse($item->tanggal_catat ?? $item->created_at)->translatedFormat('l, d F Y'),
-                    'pelatih'       => $namaPelatih,
+                    'pelatih'       => $item->nama_pelatih ?? $namaPelatih,
                     'gaya_renang'   => $item->gaya_renang ?? 'Gaya Bebas',
                     'catatan_waktu' => $item->catatan_waktu,
                     'rata_rata'     => number_format($avg, 1),
@@ -1061,6 +1073,15 @@ class ParentsController extends Controller
         extract($data);
 
         $activeTab = $request->input('tab', 'pelatih');
+        $filterBulan = sprintf('%02d', (int) $request->input('bulan', date('m')));
+        $filterTahun = (string) $request->input('tahun', date('Y'));
+
+        $namaBulanList = [
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+            '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+            '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+        ];
+        $namaBulanTerpilih = ($namaBulanList[$filterBulan] ?? 'November') . ' ' . $filterTahun;
 
         $idCabangSiswa = $siswa->id_cabang ?? null;
 
@@ -1085,14 +1106,30 @@ class ParentsController extends Controller
         $currentYear  = now()->year;
         $namaBulanIni = Carbon::now()->translatedFormat('F Y');
 
-        // Daftar id_pelatih yang sudah dinilai oleh parent ini pada bulan berjalan
-        $ratedCoachIdsThisMonth = DB::table('ulasan_pelatih')
+        // Daftar ulasan pelatih yang sudah diberikan oleh parent ini pada bulan berjalan
+        $ulasanPelatihBulanIni = DB::table('ulasan_pelatih')
             ->where('id_parents', $parentId)
             ->whereYear('created_at', $currentYear)
             ->whereMonth('created_at', $currentMonth)
-            ->pluck('id_pelatih')
-            ->map(fn($id) => (int) $id)
-            ->toArray();
+            ->get()
+            ->keyBy('id_pelatih');
+
+        $ratedCoachIdsThisMonth = $ulasanPelatihBulanIni->keys()->map(fn($id) => (int) $id)->toArray();
+
+        // Riwayat ulasan pelatih oleh parent ini berdasarkan filter bulan & tahun
+        $riwayatUlasanPelatih = DB::table('ulasan_pelatih')
+            ->join('pelatih', 'ulasan_pelatih.id_pelatih', '=', 'pelatih.id')
+            ->join('users', 'pelatih.id_user', '=', 'users.id')
+            ->where('ulasan_pelatih.id_parents', $parentId)
+            ->whereYear('ulasan_pelatih.created_at', (int) $filterTahun)
+            ->whereMonth('ulasan_pelatih.created_at', (int) $filterBulan)
+            ->select(
+                'ulasan_pelatih.*',
+                'users.nama as nama_pelatih',
+                'users.foto as foto_pelatih'
+            )
+            ->orderBy('ulasan_pelatih.created_at', 'desc')
+            ->get();
 
         // Cek apakah club sudah dinilai oleh parent ini pada bulan berjalan
         $clubReviewThisMonth = DB::table('ulasan_club')
@@ -1100,6 +1137,27 @@ class ParentsController extends Controller
             ->whereYear('created_at', $currentYear)
             ->whereMonth('created_at', $currentMonth)
             ->first();
+
+        // Riwayat ulasan club oleh parent ini berdasarkan filter bulan & tahun
+        $riwayatUlasanClub = DB::table('ulasan_club')
+            ->leftJoin('cabang', 'ulasan_club.id_cabang', '=', 'cabang.id')
+            ->where('ulasan_club.id_parents', $parentId)
+            ->whereYear('ulasan_club.created_at', (int) $filterTahun)
+            ->whereMonth('ulasan_club.created_at', (int) $filterBulan)
+            ->select('ulasan_club.*', 'cabang.nama as nama_cabang')
+            ->orderBy('ulasan_club.created_at', 'desc')
+            ->get();
+
+        // Tahun yang tersedia untuk dropdown filter
+        $tahunTersedia = DB::table('ulasan_pelatih')
+            ->where('id_parents', $parentId)
+            ->selectRaw('YEAR(created_at) as tahun')
+            ->distinct()
+            ->pluck('tahun')
+            ->push((int) date('Y'))
+            ->unique()
+            ->sortDesc()
+            ->values();
 
         return view('parents.nilai', compact(
             'user',
@@ -1111,8 +1169,16 @@ class ParentsController extends Controller
             'cabang',
             'namaPelatih',
             'namaBulanIni',
+            'namaBulanTerpilih',
+            'namaBulanList',
+            'filterBulan',
+            'filterTahun',
+            'tahunTersedia',
+            'ulasanPelatihBulanIni',
             'ratedCoachIdsThisMonth',
-            'clubReviewThisMonth'
+            'riwayatUlasanPelatih',
+            'clubReviewThisMonth',
+            'riwayatUlasanClub'
         ));
     }
 
@@ -1232,11 +1298,12 @@ class ParentsController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'nama'     => 'required|string|max:255',
-            'email'    => 'required|email|max:255|unique:users,email,' . $user->id,
-            'no_hp'    => 'nullable|string|max:20',
-            'alamat'   => 'nullable|string',
-            'password' => ['nullable', 'string', 'min:8', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/', 'confirmed'],
+            'nama'      => 'required|string|max:255',
+            'email'     => 'required|email|max:255|unique:users,email,' . $user->id,
+            'no_hp'     => 'nullable|string|max:20',
+            'alamat'    => 'nullable|string',
+            'password'  => ['nullable', 'string', 'min:8', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/', 'confirmed'],
+            'foto_anak' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
         ], [
             'nama.required'      => 'Nama lengkap wajib diisi.',
             'email.required'     => 'Alamat email wajib diisi.',
@@ -1245,6 +1312,9 @@ class ParentsController extends Controller
             'password.min'       => 'Kata sandi minimal harus 8 karakter.',
             'password.regex'     => 'Kata sandi harus mengandung huruf besar, huruf kecil, dan angka.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
+            'foto_anak.image'    => 'File foto profil anak harus berupa gambar.',
+            'foto_anak.mimes'    => 'Format foto harus berupa JPG, JPEG, PNG, atau WEBP.',
+            'foto_anak.max'      => 'Ukuran file foto profil anak maksimal 3MB.',
         ]);
 
         $userData = [
@@ -1267,7 +1337,33 @@ class ParentsController extends Controller
             ]);
         }
 
+        // Proses update foto profil anak
+        $data = $this->getParentAndChildData();
+        $targetSiswaId = $request->input('id_siswa', $data['siswa']->id ?? null);
+        $targetSiswa = $targetSiswaId ? DB::table('siswa')->where('id', $targetSiswaId)->first() : null;
+
+        if ($request->hasFile('foto_anak') && $targetSiswa) {
+            $file = $request->file('foto_anak');
+            $extension = strtolower($file->getClientOriginalExtension());
+            $filename = 'siswa_' . time() . '_' . uniqid() . '.' . $extension;
+            $destPath = public_path('uploads/siswa');
+            if (!file_exists($destPath)) {
+                mkdir($destPath, 0755, true);
+            }
+            $file->move($destPath, $filename);
+
+            // Hapus foto lama jika ada
+            if (!empty($targetSiswa->foto) && file_exists(public_path($targetSiswa->foto))) {
+                @unlink(public_path($targetSiswa->foto));
+            }
+
+            DB::table('siswa')->where('id', $targetSiswa->id)->update([
+                'foto' => 'uploads/siswa/' . $filename,
+                'updated_at' => now(),
+            ]);
+        }
+
         return redirect()->route('parents.pengaturan')
-            ->with('success', 'Profil dan pengaturan berhasil diperbarui.');
+            ->with('success', 'Profil dan foto profil anak berhasil diperbarui.');
     }
 }

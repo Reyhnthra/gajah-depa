@@ -547,7 +547,7 @@
                 </div>
             </div>
 
-            <form id="formEditTransaksi" method="POST" action="" class="space-y-4 text-xs">
+            <form id="formEditTransaksi" method="POST" action="" class="space-y-4 text-xs" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan data transaksi ini?')">
                 @csrf
                 <input type="hidden" name="id" id="editTransaksiId">
 

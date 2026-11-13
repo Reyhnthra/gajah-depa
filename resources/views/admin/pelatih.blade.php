@@ -294,7 +294,7 @@
                         @endphp
                         <div class="card-pelatih-item w-[280px] sm:w-[calc((100%-20px)/2)] md:w-[calc((100%-40px)/3)] lg:w-[calc((100%-60px)/4)] shrink-0 snap-start bg-white rounded-2xl p-4 sm:p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-md hover:border-sky-200 hover:-translate-y-0.5 transition cursor-pointer group"
                             data-nama="{{ strtolower($pelatih->nama) }}" data-email="{{ strtolower($pelatih->email) }}" data-rek="{{ strtolower($pelatih->no_rek ?? '') }}"
-                            onclick="openDetailPelatih({{ $pelatih->id_pelatih }}, '{{ addslashes($pelatih->nama) }}', '{{ addslashes($initials) }}', '{{ addslashes($pelatih->email) }}', '{{ addslashes($pelatih->tempat_lahir ?? '-') }}', '{{ $pelatih->tanggal_lahir ?? '' }}', '{{ $pelatih->tanggal_lahir ? date('d/m/Y', strtotime($pelatih->tanggal_lahir)) : '-' }}', '{{ addslashes($pelatih->no_rek ?? '-') }}', '{{ $pelatih->status }}', '{{ $pelatihFotoUrl }}', {{ $jml_hadir }}, {{ $jml_izin }}, {{ $jml_sakit }}, {{ $jml_total }}, {{ $riwayat_json }})">
+                            onclick="openDetailPelatih({{ $pelatih->id_pelatih }}, '{{ addslashes($pelatih->nama) }}', '{{ addslashes($initials) }}', '{{ addslashes($pelatih->email) }}', '{{ addslashes($pelatih->tempat_lahir ?? '-') }}', '{{ $pelatih->tanggal_lahir ?? '' }}', '{{ $pelatih->tanggal_lahir ? date('d/m/Y', strtotime($pelatih->tanggal_lahir)) : '-' }}', '{{ addslashes($pelatih->no_rek ?? '-') }}', '{{ $pelatih->status }}', '{{ $pelatihFotoUrl }}', {{ $jml_hadir }}, {{ $jml_izin }}, {{ $jml_sakit }}, {{ $jml_total }}, {{ $riwayat_json }}, '{{ addslashes($pelatih->no_hp ?? '') }}')">
                         <div>
                             <div class="flex items-start justify-between gap-1 mb-3 sm:mb-4">
                                 @if($pelatih->foto && file_exists(public_path($pelatih->foto)))
@@ -321,6 +321,11 @@
                                 <div class="truncate">
                                     <i class="fa-regular fa-credit-card mr-1"></i>Rek: {{ $pelatih->no_rek ?? '-' }}
                                 </div>
+                                @if(!empty($pelatih->no_hp))
+                                    <div class="truncate text-emerald-600 font-semibold">
+                                        <i class="fa-brands fa-whatsapp mr-1 text-emerald-500"></i>{{ $pelatih->no_hp }}
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- Stat kehadiran mini -->
@@ -583,6 +588,13 @@
                         class="w-full px-3.5 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
                 </div>
 
+                <!-- No WhatsApp -->
+                <div>
+                    <label for="tambah_no_hp" class="block font-semibold text-slate-700 mb-1.5">No. WhatsApp / HP</label>
+                    <input type="text" id="tambah_no_hp" name="no_hp" placeholder="Contoh: 081234567890 (opsional)"
+                        class="w-full px-3.5 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
+                </div>
+
                 <!-- No Rekening -->
                 <div>
                     <label for="no_rek" class="block font-semibold text-slate-700 mb-1.5">No. Rekening</label>
@@ -738,7 +750,13 @@
                     <div>
                         <h3 id="dpNama" class="text-lg font-bold text-[#00a5ec]"></h3>
                         <p id="dpEmail" class="text-xs text-slate-500"></p>
-                        <span id="dpStatusBadge" class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border"></span>
+                        <div class="flex flex-wrap items-center gap-2 mt-1">
+                            <span id="dpStatusBadge" class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border"></span>
+                            <a id="dpWaHeader" href="#" target="_blank" class="hidden inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-300 hover:bg-emerald-100 transition shadow-2xs">
+                                <i class="fa-brands fa-whatsapp text-xs text-emerald-500"></i>
+                                <span id="dpNoHp"></span>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
@@ -769,16 +787,27 @@
                 <div id="tabInfo" class="p-5 space-y-5">
 
                     <!-- Info Biodata -->
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                         <div class="bg-slate-50 rounded-xl p-3">
                             <p class="text-slate-400 mb-0.5">Tempat, Tgl Lahir</p>
                             <p id="dpTTL" class="font-semibold text-slate-700"></p>
+                        </div>
+                        <div class="bg-slate-50 rounded-xl p-3 flex flex-col justify-between">
+                            <div>
+                                <p class="text-slate-400 mb-0.5">No. WhatsApp</p>
+                                <p id="dpNoHpCard" class="font-semibold text-slate-700">-</p>
+                            </div>
+                            <a id="dpWaBtn" href="#" target="_blank" class="hidden inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 hover:text-emerald-700 mt-1 transition">
+                                <i class="fa-brands fa-whatsapp text-xs text-emerald-500"></i>
+                                <span>Hubungi WA</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                            </a>
                         </div>
                         <div class="bg-slate-50 rounded-xl p-3">
                             <p class="text-slate-400 mb-0.5">No. Rekening</p>
                             <p id="dpRek" class="font-semibold text-slate-700"></p>
                         </div>
-                        <div class="col-span-2 sm:col-span-1 bg-slate-50 rounded-xl p-3">
+                        <div class="bg-slate-50 rounded-xl p-3">
                             <p class="text-slate-400 mb-0.5">Total Sesi</p>
                             <p id="dpTotal" class="font-semibold text-slate-700"></p>
                         </div>
@@ -829,7 +858,7 @@
 
                 <!-- ===== TAB: EDIT ===== -->
                 <div id="tabEdit" class="p-5 hidden">
-                    <form id="formEditPelatih" method="POST" action="" enctype="multipart/form-data" class="space-y-4 text-xs">
+                    <form id="formEditPelatih" method="POST" action="" enctype="multipart/form-data" class="space-y-4 text-xs" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan data profil pelatih ini?')">
                         @csrf
                         <input type="hidden" name="_method" value="POST">
 
@@ -869,6 +898,13 @@
                         <div>
                             <label class="block font-semibold text-slate-700 mb-1.5">Email <span class="text-rose-500">*</span></label>
                             <input type="email" id="editEmail" name="email" required
+                                class="w-full px-3.5 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
+                        </div>
+
+                        <!-- No WhatsApp -->
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1.5">No. WhatsApp / HP</label>
+                            <input type="text" id="editNoHp" name="no_hp" placeholder="Contoh: 081234567890"
                                 class="w-full px-3.5 py-2.5 bg-[#f8fafc] border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
                         </div>
 
@@ -1062,7 +1098,7 @@
                 </button>
             </div>
 
-            <form id="formEditAbsensiPelatih" method="POST" action="" class="space-y-4 text-xs">
+            <form id="formEditAbsensiPelatih" method="POST" action="" class="space-y-4 text-xs" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan data absensi pelatih ini?')">
                 @csrf
                 <input type="hidden" name="id" id="editAbsensiId">
 
@@ -1235,7 +1271,18 @@
         let _currentFotoUrl = '';
         let _currentInitials = '';
 
-        function openDetailPelatih(id, nama, initials, email, tempatLahir, tglLahirRaw, tglLahirFormatted, noRek, status, fotoUrl, jmlHadir, jmlIzin, jmlSakit, jmlTotal, riwayat) {
+        function formatWaUrl(phone) {
+            if (!phone) return '#';
+            let clean = phone.replace(/[^0-9]/g, '');
+            if (clean.startsWith('0')) {
+                clean = '62' + clean.slice(1);
+            } else if (!clean.startsWith('62')) {
+                clean = '62' + clean;
+            }
+            return 'https://wa.me/' + clean;
+        }
+
+        function openDetailPelatih(id, nama, initials, email, tempatLahir, tglLahirRaw, tglLahirFormatted, noRek, status, fotoUrl, jmlHadir, jmlIzin, jmlSakit, jmlTotal, riwayat, noHp) {
             _hapusId   = id;
             _hapusNama = nama;
             _currentFotoUrl = fotoUrl || '';
@@ -1258,14 +1305,41 @@
             document.getElementById('dpJmlIzin').textContent  = jmlIzin;
             document.getElementById('dpJmlSakit').textContent = jmlSakit;
 
+            // WhatsApp Handling
+            const waHeader = document.getElementById('dpWaHeader');
+            const noHpSpan = document.getElementById('dpNoHp');
+            const waCard = document.getElementById('dpNoHpCard');
+            const waBtn = document.getElementById('dpWaBtn');
+            const editNoHp = document.getElementById('editNoHp');
+
+            if (editNoHp) editNoHp.value = (noHp && noHp !== '-') ? noHp : '';
+
+            if (noHp && noHp.trim() !== '' && noHp.trim() !== '-') {
+                const waUrl = formatWaUrl(noHp);
+                if (noHpSpan) noHpSpan.textContent = noHp;
+                if (waHeader) {
+                    waHeader.href = waUrl;
+                    waHeader.classList.remove('hidden');
+                }
+                if (waCard) waCard.textContent = noHp;
+                if (waBtn) {
+                    waBtn.href = waUrl;
+                    waBtn.classList.remove('hidden');
+                }
+            } else {
+                if (waHeader) waHeader.classList.add('hidden');
+                if (waCard) waCard.textContent = 'Belum diisi';
+                if (waBtn) waBtn.classList.add('hidden');
+            }
+
             // Status badge
             const badge = document.getElementById('dpStatusBadge');
             if (status === 'aktif') {
                 badge.textContent = 'Aktif';
-                badge.className   = 'inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-emerald-400 text-emerald-600 bg-emerald-50';
+                badge.className   = 'inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-emerald-400 text-emerald-600 bg-emerald-50';
             } else {
                 badge.textContent = 'Non-Aktif';
-                badge.className   = 'inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-slate-300 text-slate-500 bg-slate-50';
+                badge.className   = 'inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-slate-300 text-slate-500 bg-slate-50';
             }
 
             // Populate edit form

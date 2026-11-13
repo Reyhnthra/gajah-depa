@@ -408,6 +408,7 @@ class AdminPelatihController extends Controller
             'tempat_lahir'  => 'required|string|max:255',
             'tanggal_lahir' => 'required|date',
             'email'         => 'required|email|unique:users,email',
+            'no_hp'         => 'nullable|string|max:30',
             'no_rek'        => 'required|string|max:50',
             'foto'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
@@ -440,7 +441,7 @@ class AdminPelatihController extends Controller
             $user = User::create([
                 'nama'          => $request->nama,
                 'email'         => $request->email,
-                'no_hp'         => null,
+                'no_hp'         => $request->filled('no_hp') ? $request->no_hp : null,
                 'jenis_kelamin' => 'laki-laki',
                 'password'      => null,
                 'password_set'  => false,
@@ -584,6 +585,7 @@ class AdminPelatihController extends Controller
             'tempat_lahir'  => 'required|string|max:255',
             'tanggal_lahir' => 'required|date',
             'email'         => 'required|email|unique:users,email,' . $pelatih->id_user,
+            'no_hp'         => 'nullable|string|max:30',
             'no_rek'        => 'required|string|max:50',
             'status'        => 'required|in:aktif,nonaktif',
             'foto'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
@@ -604,6 +606,7 @@ class AdminPelatihController extends Controller
             $userUpdateData = [
                 'nama'       => $request->nama,
                 'email'      => $request->email,
+                'no_hp'      => $request->filled('no_hp') ? $request->no_hp : null,
                 'status'     => $request->status,
                 'updated_at' => now(),
             ];

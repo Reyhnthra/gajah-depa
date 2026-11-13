@@ -105,6 +105,27 @@ Route::middleware(['auth', 'admin'])->group(function () {
         return redirect()->back()->with('sukses_swimmer', "Berhasil! {$siswa->nama} resmi ditetapkan sebagai Best Member of the Month untuk bulan ini.");
     })->name('admin.best_swimmer.store');
 
+    // Batalkan / Reset Best Member of the Month oleh Admin
+    Route::post('/admin/best-swimmer/reset', function (\Illuminate\Http\Request $request) {
+        $tahun = (int) ($request->tahun ?? date('Y'));
+        $bulan = (int) ($request->bulan ?? date('m'));
+        $adminCabang = \Illuminate\Support\Facades\Auth::user()->id_cabang ?? null;
+
+        if (\Illuminate\Support\Facades\Schema::hasTable('best_swimmer')) {
+            $query = \Illuminate\Support\Facades\DB::table('best_swimmer')
+                ->where('tahun', $tahun)
+                ->where('bulan', $bulan);
+
+            if ($adminCabang) {
+                $query->where('id_cabang', $adminCabang);
+            }
+
+            $query->delete();
+        }
+
+        return redirect()->back()->with('sukses_swimmer', 'Penetapan Best Member berhasil dibatalkan / di-reset.');
+    })->name('admin.best_swimmer.reset');
+
     // Fitur Manajemen Pelatih (Admin)
     Route::get('/admin/pelatih', [AdminPelatihController::class, 'index'])->name('admin.pelatih.index');
     Route::get('/admin/pelatih/export', [AdminPelatihController::class, 'export'])->name('admin.pelatih.export');

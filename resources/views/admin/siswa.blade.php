@@ -527,6 +527,7 @@
                         <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-100">
                             <tr>
                                 <th class="py-3.5 px-4">Tanggal Sesi</th>
+                                <th class="py-3.5 px-4">Kelas</th>
                                 <th class="py-3.5 px-4 text-center">Total Siswa</th>
                                 <th class="py-3.5 px-4 text-center">
                                     <span class="text-emerald-600">Hadir</span>
@@ -565,6 +566,12 @@
                                         <div class="font-bold text-slate-800">{{ $tanggalFmt }}</div>
                                         <div class="text-[10px] text-slate-400">{{ $hariNama }}</div>
                                     </td>
+                                    <td class="py-3.5 px-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-50 text-[#008cc9] border border-sky-100 shadow-2xs">
+                                            <i class="fa-solid fa-graduation-cap mr-1.5 text-sky-500 text-[11px]"></i>
+                                            {{ $sesi['nama_kelas'] ?? 'Kelas Renang' }}
+                                        </span>
+                                    </td>
                                     <td class="py-3.5 px-4 text-center">
                                         <span class="font-semibold text-slate-700">{{ $sesi['total'] }}</span>
                                     </td>
@@ -590,7 +597,7 @@
                                     </td>
                                     <td class="py-3.5 px-4 text-center">
                                         <button type="button"
-                                            onclick="openDetailSesi('{{ $tanggalFmt }}', '{{ $hariNama }}', {{ $sesi['total'] }}, {{ $sesi['hadir'] }}, {{ $sesi['izin'] }}, {{ $sesi['sakit'] }}, {{ $sesi['tidak_hadir'] }}, {{ $pctHadir }}, {{ $sesiJson }}, '{{ $sesi['tanggal'] }}')"
+                                            onclick="openDetailSesi('{{ $tanggalFmt }}', '{{ $hariNama }}', {{ $sesi['total'] }}, {{ $sesi['hadir'] }}, {{ $sesi['izin'] }}, {{ $sesi['sakit'] }}, {{ $sesi['tidak_hadir'] }}, {{ $pctHadir }}, {{ $sesiJson }}, '{{ $sesi['tanggal'] }}', '{{ addslashes($sesi['nama_kelas'] ?? 'Kelas Renang') }}')"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#00a5ec]/10 hover:bg-[#00a5ec]/20 text-[#00a5ec] rounded-lg text-[11px] font-semibold transition">
                                             <i class="fa-solid fa-eye text-[10px]"></i>
                                             Lihat
@@ -1275,7 +1282,7 @@
 
                 <!-- ===== TAB 4: EDIT DATA SISWA ===== -->
                 <div id="tabSiswaEdit" class="hidden">
-                    <form id="formEditSiswa" method="POST" action="" enctype="multipart/form-data" class="space-y-4 text-xs">
+                    <form id="formEditSiswa" method="POST" action="" enctype="multipart/form-data" class="space-y-4 text-xs" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan data profil siswa ini?')">
                         @csrf
                         <input type="hidden" name="_method" value="POST">
 
@@ -2359,13 +2366,13 @@
         let _sesiDetailData = [];
         let _currentSesiRawDate = '';
 
-        function openDetailSesi(tanggal, hari, total, hadir, izin, sakit, alpha, pct, detail, rawDate) {
+        function openDetailSesi(tanggal, hari, total, hadir, izin, sakit, alpha, pct, detail, rawDate, namaKelas) {
             _sesiDetailData = detail;
             _currentSesiRawDate = rawDate || '';
 
             // Isi header
-            document.getElementById('sesiModalTitle').textContent = 'Sesi ' + tanggal;
-            document.getElementById('sesiModalSubtitle').textContent = hari + ' · ' + total + ' siswa tercatat';
+            document.getElementById('sesiModalTitle').textContent = 'Sesi ' + (namaKelas ? namaKelas + ' · ' : '') + tanggal;
+            document.getElementById('sesiModalSubtitle').textContent = hari + (namaKelas ? ' · ' + namaKelas : '') + ' · ' + total + ' siswa tercatat';
 
             // KPI
             document.getElementById('sesiKpiTotal').textContent = total;

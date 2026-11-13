@@ -316,6 +316,7 @@
                                     'kejuaraan'     => $p->kejuaraan ?? null,
                                     'tanggal_raw'   => $p->tanggal_catat ? date('Y-m-d', strtotime($p->tanggal_catat)) : null,
                                     'tanggal_catat' => $p->tanggal_catat ? date('d/m/Y', strtotime($p->tanggal_catat)) : '-',
+                                    'nama_pelatih'  => $p->nama_pelatih ?? null,
                                 ])->values(),
                             ];
                         @endphp
@@ -612,9 +613,10 @@
                         @php
                             $avg = number_format(($pen->teknik + $pen->kecepatan + $pen->ketahanan) / 3.0, 1);
                             $tglYmd = \Carbon\Carbon::parse($pen->tanggal_catat)->format('Y-m-d');
+                            $isOwner = empty($pen->id_pelatih) || ((int)($pen->id_pelatih ?? 0) === (int)($pelatihId ?? 0));
                         @endphp
                         <div class="penilaian-siswa-card p-6 rounded-2xl border border-slate-100 bg-white hover:shadow-xs transition"
-                             data-search="{{ strtolower(($pen->nama_siswa ?? '') . ' ' . ($pen->nama_kelas ?? '') . ' ' . ($pen->gaya_renang ?? '') . ' ' . ($pen->catatan ?? '')) }}">
+                             data-search="{{ strtolower(($pen->nama_siswa ?? '') . ' ' . ($pen->nama_kelas ?? '') . ' ' . ($pen->gaya_renang ?? '') . ' ' . ($pen->nama_pelatih ?? '') . ' ' . ($pen->catatan ?? '')) }}">
                             <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
                                 <div>
                                     <div class="flex flex-wrap items-center gap-2 mb-1">
@@ -627,9 +629,14 @@
                                             </span>
                                         @endif
                                     </div>
-                                    <p class="text-xs text-slate-400">
-                                        {{ \Carbon\Carbon::parse($pen->tanggal_catat)->translatedFormat('d F Y') }} · {{ $pen->gaya_renang }}
-                                    </p>
+                                    <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400 mt-1">
+                                        <span>{{ \Carbon\Carbon::parse($pen->tanggal_catat)->translatedFormat('d F Y') }} · {{ $pen->gaya_renang }}</span>
+                                        <span>·</span>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-50 text-[#008cc9] border border-sky-100">
+                                            <i class="fa-solid fa-user-check text-[10px]"></i>
+                                            Dinilai oleh: {{ $pen->nama_pelatih ?? 'Pelatih' }}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="flex items-center justify-between sm:justify-end gap-4">
                                     <div class="text-left sm:text-right">
@@ -637,31 +644,38 @@
                                         <p class="text-2xl font-extrabold text-[#00a5ec] mt-0.5">{{ $avg }}</p>
                                     </div>
                                     <div class="flex items-center gap-1.5 border-l border-slate-100 pl-3">
-                                        <button type="button"
-                                                onclick="openEditPenilaianModal({{ json_encode([
-                                                    'id' => $pen->id,
-                                                    'nama_siswa' => $pen->nama_siswa,
-                                                    'nama_kelas' => $pen->nama_kelas ?? 'Kelas Renang',
-                                                    'tanggal' => $tglYmd,
-                                                    'gaya_renang' => $pen->gaya_renang,
-                                                    'catatan_waktu' => $pen->catatan_waktu ?? '',
-                                                    'teknik' => $pen->teknik,
-                                                    'kecepatan' => $pen->kecepatan,
-                                                    'ketahanan' => $pen->ketahanan,
-                                                    'catatan' => $pen->catatan ?? '',
-                                                ]) }})"
-                                                title="Edit Penilaian"
-                                                class="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#008cc9] border border-sky-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                            <span>Edit</span>
-                                        </button>
-                                        <button type="button"
-                                                onclick="openDeletePenilaianModal({{ $pen->id }}, {{ json_encode($pen->nama_siswa) }}, {{ json_encode($pen->gaya_renang . ' (' . \Carbon\Carbon::parse($pen->tanggal_catat)->translatedFormat('d M Y') . ')') }})"
-                                                title="Hapus Penilaian"
-                                                class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
-                                            <i class="fa-solid fa-trash-can"></i>
-                                            <span>Hapus</span>
-                                        </button>
+                                        @if($isOwner)
+                                            <button type="button"
+                                                    onclick="openEditPenilaianModal({{ json_encode([
+                                                        'id' => $pen->id,
+                                                        'nama_siswa' => $pen->nama_siswa,
+                                                        'nama_kelas' => $pen->nama_kelas ?? 'Kelas Renang',
+                                                        'tanggal' => $tglYmd,
+                                                        'gaya_renang' => $pen->gaya_renang,
+                                                        'catatan_waktu' => $pen->catatan_waktu ?? '',
+                                                        'teknik' => $pen->teknik,
+                                                        'kecepatan' => $pen->kecepatan,
+                                                        'ketahanan' => $pen->ketahanan,
+                                                        'catatan' => $pen->catatan ?? '',
+                                                    ]) }})"
+                                                    title="Edit Penilaian"
+                                                    class="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-[#008cc9] border border-sky-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                                                <i class="fa-solid fa-pen-to-square"></i>
+                                                <span>Edit</span>
+                                            </button>
+                                            <button type="button"
+                                                    onclick="openDeletePenilaianModal({{ $pen->id }}, {{ json_encode($pen->nama_siswa) }}, {{ json_encode($pen->gaya_renang . ' (' . \Carbon\Carbon::parse($pen->tanggal_catat)->translatedFormat('d M Y') . ')') }})"
+                                                    title="Hapus Penilaian"
+                                                    class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                                <span>Hapus</span>
+                                            </button>
+                                        @else
+                                            <div class="px-2.5 py-1.5 bg-slate-100 text-slate-400 border border-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-not-allowed" title="Dinilai oleh {{ $pen->nama_pelatih ?? 'pelatih lain' }}. Hanya beliau yang dapat mengedit/menghapus penilaian ini.">
+                                                <i class="fa-solid fa-lock text-[10px]"></i>
+                                                <span>Terkunci</span>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -764,23 +778,11 @@
                 </div>
 
                 <div id="absensiSiswaContainer" class="space-y-4 pt-2 hidden">
-                    <div class="flex flex-wrap items-center justify-between gap-3 bg-sky-50/70 p-3.5 rounded-2xl border border-sky-100">
+                    <div class="flex items-center justify-between gap-3 bg-sky-50/70 p-3.5 rounded-2xl border border-sky-100">
                         <div class="flex items-center gap-2">
                             <label class="block text-sm font-bold text-slate-800">Daftar Kehadiran Siswa</label>
                             <span id="absensiCountBadge" class="text-xs font-semibold px-2.5 py-0.5 bg-white text-sky-700 rounded-full border border-sky-200 shadow-2xs"></span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button type="button" onclick="setSemuaStatusAbsensi('hadir')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
-                                <i class="fa-solid fa-check-double text-xs"></i>
-                                <span>Set Hadir Semua</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Notifikasi Hadir Semua -->
-                    <div id="absensiHadirSemuaNotif" class="hidden p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2 transition">
-                        <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
-                        <span>Seluruh siswa pada kelas ini telah berhasil ditandai <strong>Hadir</strong> ✓</span>
                     </div>
                     
                     @foreach($allSiswaList as $siswa)
@@ -1001,7 +1003,7 @@
                 <p id="editPenilaianSubtitle" class="text-slate-500 text-sm mt-1">Perbarui nilai perkembangan siswa</p>
             </div>
 
-            <form id="editPenilaianForm" method="POST" class="space-y-4">
+            <form id="editPenilaianForm" method="POST" class="space-y-4" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan penilaian siswa ini?')">
                 @csrf
                 <input type="hidden" name="filter_kelas" value="{{ $selectedKelasId ?? 'semua' }}">
 
@@ -2234,7 +2236,10 @@
                                     <span class="px-2.5 py-0.5 bg-cyan-50 text-[#008cc9] border border-cyan-200 font-semibold text-[10px] rounded-full"><i class="fa-solid fa-person-swimming mr-1 text-[9px]"></i>${p.gaya_renang}</span>
                                     ${p.catatan_waktu && p.catatan_waktu !== '-' ? `<span class="px-2.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-bold"><i class="fa-solid fa-stopwatch text-amber-500 mr-1 text-[9px]"></i>${p.catatan_waktu}</span>` : ''}
                                 </div>
-                                <p class="text-xs font-bold text-slate-700">Dicatat pada: ${p.tanggal_catat}</p>
+                                <p class="text-xs font-bold text-slate-700">
+                                    Dicatat pada: ${p.tanggal_catat}
+                                    ${p.nama_pelatih ? `<span class="font-semibold text-[#008cc9] ml-1.5 inline-flex items-center gap-1 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100 text-[11px]"><i class="fa-solid fa-user-check text-[10px]"></i> ${p.nama_pelatih}</span>` : ''}
+                                </p>
                             </div>
                             <div class="text-right shrink-0">
                                 <span class="text-[10px] text-slate-400 block">Rata-rata</span>

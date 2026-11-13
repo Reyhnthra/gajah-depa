@@ -117,12 +117,16 @@
         <!-- Sidebar Footer -->
         <div class="p-4 border-t border-white/10 flex items-center justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
-                <div class="w-10 h-10 rounded-full bg-amber-400 text-amber-900 font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">
-                    {{ strtoupper(substr(Auth::user()->nama ?? 'HR', 0, 2)) }}
+                <div class="w-10 h-10 rounded-full bg-amber-400 text-amber-950 font-bold text-sm flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-amber-300">
+                    @if(!empty($siswa->foto) && file_exists(public_path($siswa->foto)))
+                        <img src="{{ asset($siswa->foto) }}" alt="{{ $siswa->nama ?? 'Foto Anak' }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($siswa->nama ?? (Auth::user()->nama ?? 'AN'), 0, 2)) }}
+                    @endif
                 </div>
                 <div class="truncate">
                     <div class="text-sm font-bold text-white truncate">{{ Auth::user()->nama ?? 'Hendra Rizki' }}</div>
-                    <div class="text-[11px] text-slate-300 truncate">Orang Tua</div>
+                    <div class="text-[11px] text-slate-300 truncate">Orang Tua dari {{ $siswa->nama ?? 'Anak' }}</div>
                 </div>
             </div>
 
@@ -192,7 +196,7 @@
                         </p>
                     </div>
                 @else
-                    <form action="{{ route('parents.nilai_pelatih.store') }}" method="POST" class="space-y-6">
+                    <form action="{{ route('parents.nilai_pelatih.store') }}" method="POST" class="space-y-6" onsubmit="return confirm('Apakah Anda yakin ingin mengirim penilaian untuk pelatih ini?')">
                         @csrf
                         
                         @php
@@ -206,6 +210,11 @@
                             $selectedCoachIsRated = $selectedCoachId ? in_array((int)$selectedCoachId, $ratedIds) : false;
                             $selectedCoachInitials = strtoupper(collect(explode(' ', $selectedCoachName))->map(fn($w) => substr($w, 0, 1))->implode(''));
                             $selectedCoachInitials = substr($selectedCoachInitials, 0, 2) ?: 'PL';
+
+                            $selectedCoachReview = $selectedCoachId ? ($ulasanPelatihBulanIni[$selectedCoachId] ?? null) : null;
+                            $selectedCoachRating = $selectedCoachReview ? (int) $selectedCoachReview->bintang_rating : 5;
+                            $selectedCoachKomentar = $selectedCoachReview ? $selectedCoachReview->komentar_rating : '';
+                            $selectedCoachTanggal = $selectedCoachReview ? \Carbon\Carbon::parse($selectedCoachReview->created_at)->translatedFormat('d F Y, H:i') : '';
                         @endphp
 
                         <!-- Pilih Pelatih Custom Dropdown (Tampil Foto & Nama) -->
@@ -294,21 +303,49 @@
                     </div>
 
                     <!-- Notice if Selected Coach Already Rated This Month -->
-                    <div id="alreadyRatedPelatihNotice" class="{{ $selectedCoachIsRated ? '' : 'hidden' }} p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-3">
-                        <i class="fa-solid fa-circle-info text-amber-500 text-sm shrink-0 mt-0.5"></i>
-                        <div>
-                            <span class="font-bold block mb-0.5">Penilaian Bulan Ini Sudah Terkirim</span>
-                            <span>Anda sudah memberikan penilaian untuk pelatih ini pada bulan <strong>{{ $namaBulanIni ?? date('F Y') }}</strong>. Silakan pilih pelatih lainnya pada dropdown di atas, atau berikan penilaian kembali bulan depan.</span>
+                    <div id="alreadyRatedPelatihNotice" class="{{ $selectedCoachIsRated ? '' : 'hidden' }} p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-col gap-2.5">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-base shrink-0 mt-0.5"></i>
+                            <div>
+                                <span class="font-bold block text-slate-800">Penilaian Bulan Ini Sudah Terkirim</span>
+                                <span class="text-slate-600">Anda sudah memberikan penilaian untuk pelatih ini pada bulan <strong>{{ $namaBulanIni ?? date('F Y') }}</strong>. Silakan pilih pelatih lainnya pada dropdown di atas jika ingin menilai pelatih lain.</span>
+                            </div>
+                        </div>
+
+                        <!-- Preview Ulasan yang Sudah Diberikan -->
+                        <div id="ratedReviewPreview" class="{{ $selectedCoachIsRated ? '' : 'hidden' }} bg-white/90 border border-amber-200/80 rounded-xl p-3.5 mt-1 shadow-2xs">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="fa-solid fa-star text-amber-500"></i>
+                                    Penilaian yang Anda Berikan:
+                                </span>
+                                <span id="ratedReviewDate" class="text-[11px] font-semibold text-slate-400">
+                                    {{ $selectedCoachTanggal ? 'Dikirim pada ' . $selectedCoachTanggal . ' WIB' : '' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div id="ratedReviewStars" class="flex items-center gap-1 text-amber-400 text-sm">
+                                    @for($s = 1; $s <= 5; $s++)
+                                        <i class="fa-solid fa-star {{ $s <= $selectedCoachRating ? 'text-amber-400' : 'text-slate-200' }}"></i>
+                                    @endfor
+                                    <span class="text-xs font-bold text-slate-700 ml-1.5">({{ $selectedCoachRating }}/5)</span>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100 text-xs text-slate-700 italic">
+                                <span id="ratedReviewComment">
+                                    {{ !empty($selectedCoachKomentar) ? '"' . $selectedCoachKomentar . '"' : '(Tanpa komentar ulasan tertulis)' }}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Rating Pelatih Interactive Stars -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-2">Rating Pelatih</label>
-                        <input type="hidden" name="bintang_rating" id="ratingPelatihValue" value="5" required>
+                        <input type="hidden" name="bintang_rating" id="ratingPelatihValue" value="{{ $selectedCoachRating }}" required>
                         <div class="flex items-center gap-2 text-3xl text-slate-300" id="starContainerPelatih">
                             @for($i = 1; $i <= 5; $i++)
-                                <button type="button" onclick="setRatingPelatih({{ $i }})" class="star-btn hover:scale-110 transition focus:outline-none">
+                                <button type="button" {{ $selectedCoachIsRated ? 'disabled' : '' }} onclick="setRatingPelatih({{ $i }})" class="star-btn hover:scale-110 transition focus:outline-none disabled:cursor-not-allowed">
                                     <i class="fa-regular fa-star star-icon text-amber-400" data-star="{{ $i }}"></i>
                                 </button>
                             @endfor
@@ -320,7 +357,7 @@
                         <label class="block text-xs font-bold text-slate-700 mb-2">Komentar / Ulasan</label>
                         <textarea id="komentarPelatihInput" name="komentar_rating" rows="4" placeholder="Bagikan pengalaman Anda mengenai {{ $selectedCoachName }}..." 
                                   {{ $selectedCoachIsRated ? 'disabled' : '' }}
-                                  class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-2xl p-4 focus:outline-none focus:ring-2 focus:ring-[#00a5ec] resize-none disabled:opacity-60 disabled:cursor-not-allowed"></textarea>
+                                  class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-2xl p-4 focus:outline-none focus:ring-2 focus:ring-[#00a5ec] resize-none disabled:opacity-75 disabled:cursor-not-allowed">{{ $selectedCoachKomentar }}</textarea>
                     </div>
 
                     <!-- Submit Button -->
@@ -336,9 +373,12 @@
             <!-- Tab 2: Nilai Club Form (Image 4) -->
             @php
                 $isClubRated = !empty($clubReviewThisMonth);
+                $clubRating = $clubReviewThisMonth ? (int) $clubReviewThisMonth->bintang_rating : 5;
+                $clubKomentar = $clubReviewThisMonth ? $clubReviewThisMonth->komentar_rating : '';
+                $clubTanggal = $clubReviewThisMonth ? \Carbon\Carbon::parse($clubReviewThisMonth->created_at)->translatedFormat('d F Y, H:i') : '';
             @endphp
             <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 w-full">
-                <form action="{{ route('parents.nilai_club.store') }}" method="POST" class="space-y-6">
+                <form action="{{ route('parents.nilai_club.store') }}" method="POST" class="space-y-6" onsubmit="return confirm('Apakah Anda yakin ingin mengirim penilaian untuk club ini?')">
                     @csrf
 
                     <!-- Club Header Badge -->
@@ -359,11 +399,37 @@
                     </div>
 
                     @if($isClubRated)
-                        <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-3">
-                            <i class="fa-solid fa-circle-info text-amber-500 text-sm shrink-0 mt-0.5"></i>
-                            <div>
-                                <span class="font-bold block mb-0.5">Penilaian Club Bulan Ini Sudah Terkirim</span>
-                                <span>Anda sudah memberikan penilaian untuk club pada bulan <strong>{{ $namaBulanIni ?? date('F Y') }}</strong> ({{ $clubReviewThisMonth->bintang_rating }}/5 bintang). Penilaian club hanya dapat diberikan 1 kali setiap bulan.</span>
+                        <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-col gap-2.5">
+                            <div class="flex items-start gap-3">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-base shrink-0 mt-0.5"></i>
+                                <div>
+                                    <span class="font-bold block text-slate-800">Penilaian Club Bulan Ini Sudah Terkirim</span>
+                                    <span class="text-slate-600">Anda sudah memberikan penilaian untuk club pada bulan <strong>{{ $namaBulanIni ?? date('F Y') }}</strong>. Penilaian club hanya dapat diberikan 1 kali setiap bulan.</span>
+                                </div>
+                            </div>
+
+                            <!-- Preview Ulasan Club yang Diberikan -->
+                            <div class="bg-white/90 border border-amber-200/80 rounded-xl p-3.5 mt-1 shadow-2xs">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                                        <i class="fa-solid fa-star text-amber-500"></i>
+                                        Penilaian yang Anda Berikan:
+                                    </span>
+                                    <span class="text-[11px] font-semibold text-slate-400">
+                                        {{ $clubTanggal ? 'Dikirim pada ' . $clubTanggal . ' WIB' : '' }}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <div class="flex items-center gap-1 text-amber-400 text-sm">
+                                        @for($s = 1; $s <= 5; $s++)
+                                            <i class="fa-solid fa-star {{ $s <= $clubRating ? 'text-amber-400' : 'text-slate-200' }}"></i>
+                                        @endfor
+                                        <span class="text-xs font-bold text-slate-700 ml-1.5">({{ $clubRating }}/5)</span>
+                                    </div>
+                                </div>
+                                <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100 text-xs text-slate-700 italic">
+                                    {{ !empty($clubKomentar) ? '"' . $clubKomentar . '"' : '(Tanpa komentar ulasan tertulis)' }}
+                                </div>
                             </div>
                         </div>
                     @endif
@@ -371,7 +437,7 @@
                     <!-- Rating Club Interactive Stars -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-2">Rating Club</label>
-                        <input type="hidden" name="bintang_rating" id="ratingClubValue" value="{{ $clubReviewThisMonth->bintang_rating ?? 5 }}" required>
+                        <input type="hidden" name="bintang_rating" id="ratingClubValue" value="{{ $clubRating }}" required>
                         <div class="flex items-center gap-2 text-3xl text-slate-300" id="starContainerClub">
                             @for($i = 1; $i <= 5; $i++)
                                 <button type="button" {{ $isClubRated ? 'disabled' : '' }} onclick="setRatingClub({{ $i }})" class="star-btn-club hover:scale-110 transition focus:outline-none disabled:cursor-not-allowed">
@@ -385,7 +451,7 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-2">Komentar / Ulasan</label>
                         <textarea name="komentar_rating" rows="4" {{ $isClubRated ? 'disabled' : '' }} placeholder="Ceritakan pengalaman Anda dengan club kami..." 
-                                  class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-2xl p-4 focus:outline-none focus:ring-2 focus:ring-[#9366f6] resize-none disabled:opacity-60 disabled:cursor-not-allowed">{{ $clubReviewThisMonth->komentar_rating ?? '' }}</textarea>
+                                  class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-2xl p-4 focus:outline-none focus:ring-2 focus:ring-[#9366f6] resize-none disabled:opacity-75 disabled:cursor-not-allowed">{{ $clubKomentar }}</textarea>
                     </div>
 
                     <!-- Submit Button -->
@@ -397,6 +463,163 @@
                 </form>
             </div>
         @endif
+
+        <!-- Section: Riwayat Penilaian Saya Per Bulannya -->
+        <div class="mt-8 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 w-full">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-sky-50 text-[#00a5ec] flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800 tracking-tight">Riwayat Penilaian Anda</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Daftar ulasan & bintang rating yang telah Anda kirimkan per bulannya</p>
+                </div>
+
+                <!-- Filter Bulan & Tahun Form -->
+                <form method="GET" action="{{ route('parents.nilai') }}" class="flex items-center gap-2">
+                    <input type="hidden" name="tab" value="{{ $activeTab }}">
+                    <div class="relative">
+                        <select name="bulan" onchange="this.form.submit()" class="bg-slate-100/80 hover:bg-slate-200/60 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-3 py-2 pr-7 appearance-none focus:outline-none focus:ring-2 focus:ring-[#00a5ec] cursor-pointer transition">
+                            @foreach($namaBulanList as $code => $name)
+                                <option value="{{ $code }}" {{ $filterBulan == $code ? 'selected' : '' }}>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
+                    </div>
+
+                    <div class="relative">
+                        <select name="tahun" onchange="this.form.submit()" class="bg-slate-100/80 hover:bg-slate-200/60 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-3 py-2 pr-7 appearance-none focus:outline-none focus:ring-2 focus:ring-[#00a5ec] cursor-pointer transition">
+                            @foreach($tahunTersedia as $thn)
+                                <option value="{{ $thn }}" {{ $filterTahun == $thn ? 'selected' : '' }}>{{ $thn }}</option>
+                            @endforeach
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Content Riwayat: Tab Pelatih -->
+            @if($activeTab === 'pelatih')
+                @if($riwayatUlasanPelatih->isEmpty())
+                    <div class="py-12 px-4 text-center">
+                        <div class="w-14 h-14 rounded-full bg-slate-50 text-slate-400 border border-slate-200 flex items-center justify-center mx-auto mb-3 text-xl">
+                            <i class="fa-regular fa-comment-dots"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-700">Belum Ada Penilaian di Bulan {{ $namaBulanTerpilih }}</h4>
+                        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                            Anda belum memberikan penilaian untuk pelatih pada periode ini. Silakan gunakan formulir di atas untuk memberikan penilaian.
+                        </p>
+                    </div>
+                @else
+                    <div class="mt-6 space-y-4">
+                        <div class="text-xs font-bold text-slate-500 mb-2">
+                            Menampilkan {{ count($riwayatUlasanPelatih) }} ulasan pelatih pada bulan {{ $namaBulanTerpilih }}:
+                        </div>
+                        @foreach($riwayatUlasanPelatih as $item)
+                            @php
+                                $coachFoto = (!empty($item->foto_pelatih) && file_exists(public_path($item->foto_pelatih))) ? asset($item->foto_pelatih) : '';
+                                $coachInit = strtoupper(collect(explode(' ', $item->nama_pelatih))->map(fn($w) => substr($w, 0, 1))->implode(''));
+                                $coachInit = substr($coachInit, 0, 2) ?: 'PL';
+                                $tglUlasan = \Carbon\Carbon::parse($item->created_at)->translatedFormat('d F Y, H:i');
+                            @endphp
+                            <div class="bg-slate-50/70 hover:bg-slate-50 border border-slate-200/80 rounded-2xl p-4 sm:p-5 transition">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-[#00a5ec] text-white font-bold text-xs flex items-center justify-center shrink-0 overflow-hidden border border-slate-200 shadow-2xs">
+                                            @if($coachFoto)
+                                                <img src="{{ $coachFoto }}" alt="{{ $item->nama_pelatih }}" class="w-full h-full object-cover">
+                                            @else
+                                                {{ $coachInit }}
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-slate-800">{{ $item->nama_pelatih }}</h4>
+                                            <span class="text-[11px] text-slate-400">{{ $tglUlasan }} WIB</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 self-start sm:self-center">
+                                        <div class="flex items-center gap-1 text-amber-400 text-sm">
+                                            @for($s = 1; $s <= 5; $s++)
+                                                <i class="fa-solid fa-star {{ $s <= $item->bintang_rating ? 'text-amber-400' : 'text-slate-200' }}"></i>
+                                            @endfor
+                                        </div>
+                                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                            {{ $item->bintang_rating }}.0 / 5
+                                        </span>
+                                    </div>
+                                </div>
+
+                                @if(!empty($item->komentar_rating))
+                                    <div class="bg-white rounded-xl p-3.5 border border-slate-200/70 text-xs text-slate-700 leading-relaxed italic">
+                                        "{{ $item->komentar_rating }}"
+                                    </div>
+                                @else
+                                    <div class="text-xs text-slate-400 italic">
+                                        (Penilaian diberikan tanpa ulasan tertulis)
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            @else
+                <!-- Content Riwayat: Tab Club -->
+                @if($riwayatUlasanClub->isEmpty())
+                    <div class="py-12 px-4 text-center">
+                        <div class="w-14 h-14 rounded-full bg-slate-50 text-slate-400 border border-slate-200 flex items-center justify-center mx-auto mb-3 text-xl">
+                            <i class="fa-regular fa-comment-dots"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-700">Belum Ada Penilaian Club di Bulan {{ $namaBulanTerpilih }}</h4>
+                        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                            Anda belum memberikan penilaian untuk club pada periode ini.
+                        </p>
+                    </div>
+                @else
+                    <div class="mt-6 space-y-4">
+                        @foreach($riwayatUlasanClub as $itemClub)
+                            @php
+                                $tglClub = \Carbon\Carbon::parse($itemClub->created_at)->translatedFormat('d F Y, H:i');
+                            @endphp
+                            <div class="bg-purple-50/40 border border-purple-100 rounded-2xl p-4 sm:p-5 transition">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-[#9366f6] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                                            <i class="fa-solid fa-water-ladder text-sm"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-slate-800">{{ $itemClub->nama_cabang ?? 'Gajah Depa Akuatik Sumedang' }}</h4>
+                                            <span class="text-[11px] text-slate-400">{{ $tglClub }} WIB</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 self-start sm:self-center">
+                                        <div class="flex items-center gap-1 text-amber-400 text-sm">
+                                            @for($s = 1; $s <= 5; $s++)
+                                                <i class="fa-solid fa-star {{ $s <= $itemClub->bintang_rating ? 'text-amber-400' : 'text-slate-200' }}"></i>
+                                            @endfor
+                                        </div>
+                                        <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                            {{ $itemClub->bintang_rating }}.0 / 5
+                                        </span>
+                                    </div>
+                                </div>
+
+                                @if(!empty($itemClub->komentar_rating))
+                                    <div class="bg-white rounded-xl p-3.5 border border-purple-100 text-xs text-slate-700 leading-relaxed italic">
+                                        "{{ $itemClub->komentar_rating }}"
+                                    </div>
+                                @else
+                                    <div class="text-xs text-slate-400 italic">
+                                        (Penilaian diberikan tanpa ulasan tertulis)
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            @endif
+        </div>
 
     </main>
 
@@ -417,8 +640,12 @@
 
             <!-- Top Profile Card Badge (Light Sky Blue Container) -->
             <div class="bg-[#f0f9ff] border border-sky-200/70 rounded-2xl p-4 flex items-center gap-4 mb-6">
-                <div class="w-14 h-14 rounded-full bg-[#00a5ec] text-white font-black text-lg flex items-center justify-center shrink-0 shadow-sm">
-                    {{ strtoupper(substr($siswa->nama ?? 'AR', 0, 2)) }}
+                <div class="w-14 h-14 rounded-full bg-amber-400 text-amber-950 font-black text-lg flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-amber-300">
+                    @if(!empty($siswa->foto) && file_exists(public_path($siswa->foto)))
+                        <img src="{{ asset($siswa->foto) }}" alt="{{ $siswa->nama ?? 'Foto Anak' }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($siswa->nama ?? 'AR', 0, 2)) }}
+                    @endif
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
@@ -524,6 +751,18 @@
 
         const namaBulanIniStr = @json($namaBulanIni ?? date('F Y'));
 
+        const reviewsPelatihData = {
+            @if(isset($ulasanPelatihBulanIni))
+                @foreach($ulasanPelatihBulanIni as $pId => $rev)
+                    {{ $pId }}: {
+                        rating: {{ (int) $rev->bintang_rating }},
+                        komentar: @json($rev->komentar_rating ?? ''),
+                        tanggal: @json(\Carbon\Carbon::parse($rev->created_at)->translatedFormat('d F Y, H:i'))
+                    },
+                @endforeach
+            @endif
+        };
+
         function toggleCoachDropdown() {
             const menu = document.getElementById('coachDropdownMenu');
             const icon = document.getElementById('coachDropdownIcon');
@@ -612,11 +851,52 @@
                 else noticeEl.classList.add('hidden');
             }
 
+            const rev = reviewsPelatihData[id];
             const komentarInput = document.getElementById('komentarPelatihInput');
-            if (komentarInput) {
-                komentarInput.placeholder = 'Bagikan pengalaman Anda mengenai ' + text + '...';
-                komentarInput.disabled = isRated;
+            const reviewPreview = document.getElementById('ratedReviewPreview');
+            const ratedReviewStars = document.getElementById('ratedReviewStars');
+            const ratedReviewComment = document.getElementById('ratedReviewComment');
+            const ratedReviewDate = document.getElementById('ratedReviewDate');
+            const ratingInput = document.getElementById('ratingPelatihValue');
+
+            if (isRated && rev) {
+                currentRatingPelatih = rev.rating;
+                if (ratingInput) ratingInput.value = rev.rating;
+                if (komentarInput) {
+                    komentarInput.value = rev.komentar || '';
+                    komentarInput.disabled = true;
+                }
+                if (reviewPreview) reviewPreview.classList.remove('hidden');
+                if (ratedReviewStars) {
+                    let starsHtml = '';
+                    for (let s = 1; s <= 5; s++) {
+                        starsHtml += `<i class="fa-solid fa-star ${s <= rev.rating ? 'text-amber-400' : 'text-slate-200'}"></i>`;
+                    }
+                    starsHtml += `<span class="text-xs font-bold text-slate-700 ml-1.5">(${rev.rating}/5)</span>`;
+                    ratedReviewStars.innerHTML = starsHtml;
+                }
+                if (ratedReviewComment) {
+                    ratedReviewComment.innerText = rev.komentar ? `"${rev.komentar}"` : '(Tanpa komentar ulasan tertulis)';
+                }
+                if (ratedReviewDate) {
+                    ratedReviewDate.innerText = rev.tanggal ? ('Dikirim pada ' + rev.tanggal + ' WIB') : '';
+                }
+            } else {
+                currentRatingPelatih = 5;
+                if (ratingInput) ratingInput.value = 5;
+                if (komentarInput) {
+                    komentarInput.value = '';
+                    komentarInput.disabled = false;
+                    komentarInput.placeholder = 'Bagikan pengalaman Anda mengenai ' + text + '...';
+                }
+                if (reviewPreview) reviewPreview.classList.add('hidden');
             }
+            renderStarsPelatih();
+
+            // Disable/enable star buttons
+            document.querySelectorAll('.star-btn').forEach(btn => {
+                btn.disabled = isRated;
+            });
 
             const btnSubmit = document.getElementById('btnSubmitPelatih');
             const btnText = document.getElementById('btnSubmitPelatihText');
@@ -633,7 +913,7 @@
             }
         }
 
-        let currentRatingPelatih = 5;
+        let currentRatingPelatih = {{ $selectedCoachRating ?? 5 }};
         function setRatingPelatih(val) {
             const btnSubmit = document.getElementById('btnSubmitPelatih');
             if (btnSubmit && btnSubmit.disabled) return;

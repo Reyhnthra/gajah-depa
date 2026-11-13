@@ -66,7 +66,8 @@
                     @endif
                 </div>
                 <h2 class="text-base font-bold text-white tracking-wide leading-snug px-1">
-                    {{ $siswa->nama_cabang ?? 'Gajah Depa' }}</h2>
+                    {{ $siswa->nama_cabang ?? 'Gajah Depa' }}
+                </h2>
             </div>
 
             <!-- Card Anak Saya -->
@@ -157,12 +158,16 @@
         <div class="p-4 border-t border-white/10 flex items-center justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
                 <div
-                    class="w-10 h-10 rounded-full bg-amber-400 text-amber-900 font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">
-                    {{ strtoupper(substr(Auth::user()->nama ?? 'HR', 0, 2)) }}
+                    class="w-10 h-10 rounded-full bg-amber-400 text-amber-950 font-bold text-sm flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-amber-300">
+                    @if(!empty($siswa->foto) && file_exists(public_path($siswa->foto)))
+                        <img src="{{ asset($siswa->foto) }}" alt="{{ $siswa->nama ?? 'Foto Anak' }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($siswa->nama ?? (Auth::user()->nama ?? 'AN'), 0, 2)) }}
+                    @endif
                 </div>
                 <div class="truncate">
                     <div class="text-sm font-bold text-white truncate">{{ Auth::user()->nama ?? 'Hendra Rizki' }}</div>
-                    <div class="text-[11px] text-slate-300 truncate">Orang Tua</div>
+                    <div class="text-[11px] text-slate-300 truncate">Orang Tua dari {{ $siswa->nama ?? 'Anak' }}</div>
                 </div>
             </div>
 
@@ -279,7 +284,8 @@
                                 <div class="flex items-start justify-between gap-2 mb-4">
                                     <div>
                                         <h4 class="font-extrabold text-[#093c56] text-sm sm:text-base leading-tight">
-                                            {{ $gItem->gaya }}</h4>
+                                            {{ $gItem->gaya }}
+                                        </h4>
                                         <span class="text-[11px] text-slate-400 font-medium">
                                             {{ $gItem->total_sesi > 0 ? $gItem->total_sesi . ' sesi dinilai' : 'Belum ada penilaian' }}
                                         </span>
@@ -423,12 +429,14 @@
                 </div>
             @empty
                 <div class="bg-white rounded-3xl p-8 sm:p-14 text-center border border-slate-100 shadow-xs">
-                    <div class="w-16 h-16 rounded-2xl bg-sky-50 text-[#00a5ec] flex items-center justify-center text-2xl mx-auto mb-4 border border-sky-100 shadow-2xs">
+                    <div
+                        class="w-16 h-16 rounded-2xl bg-sky-50 text-[#00a5ec] flex items-center justify-center text-2xl mx-auto mb-4 border border-sky-100 shadow-2xs">
                         <i class="fa-solid fa-clipboard-list"></i>
                     </div>
                     <h3 class="text-base sm:text-lg font-bold text-slate-800">Belum Ada Riwayat Penilaian</h3>
                     <p class="text-xs sm:text-sm text-slate-400 mt-1.5 max-w-md mx-auto">
-                        Pelatih belum menginput penilaian latihan untuk {{ $siswa->nama ?? 'anak Anda' }}. Penilaian akan otomatis tampil di sini setelah pelatih mencatat hasil evaluasi sesi latihan.
+                        Pelatih belum menginput penilaian latihan untuk {{ $siswa->nama ?? 'anak Anda' }}. Penilaian akan
+                        otomatis tampil di sini setelah pelatih mencatat hasil evaluasi sesi latihan.
                     </p>
                 </div>
             @endforelse
@@ -458,8 +466,12 @@
             <!-- Top Profile Card Badge (Light Sky Blue Container) -->
             <div class="bg-[#f0f9ff] border border-sky-200/70 rounded-2xl p-4 flex items-center gap-4 mb-6">
                 <div
-                    class="w-14 h-14 rounded-full bg-[#00a5ec] text-white font-black text-lg flex items-center justify-center shrink-0 shadow-sm">
-                    {{ strtoupper(substr($siswa->nama ?? 'AR', 0, 2)) }}
+                    class="w-14 h-14 rounded-full bg-amber-400 text-amber-950 font-black text-lg flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-amber-300">
+                    @if(!empty($siswa->foto) && file_exists(public_path($siswa->foto)))
+                        <img src="{{ asset($siswa->foto) }}" alt="{{ $siswa->nama ?? 'Foto Anak' }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($siswa->nama ?? 'AR', 0, 2)) }}
+                    @endif
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
@@ -594,46 +606,10 @@
                     </h4>
                 </div>
 
-                <!-- Center Assessment Card -->
-                <div
-                    class="relative z-10 w-full bg-white/[0.06] backdrop-blur-[2px] rounded-2xl p-5 border border-white/25 shadow-lg space-y-3 my-auto">
-                    <span id="storySesi"
-                        class="inline-block px-3.5 py-1 bg-amber-400 text-amber-950 font-extrabold text-xs rounded-full shadow-xs">Sesi
-                        3</span>
-                    <h5 id="storyNama" class="text-xl font-extrabold text-white tracking-tight drop-shadow-xs">Ahmad
-                        Rizki</h5>
-                    <p id="storyTanggal" class="text-[11px] text-cyan-50 font-medium drop-shadow-2xs">Kamis, 01 Oktober
-                        2026</p>
-
-                    <div class="pt-1">
-                        <span class="text-[11px] text-cyan-100 block font-medium">Rata-rata Nilai</span>
-                        <div id="storyScore" class="text-4xl font-black text-amber-300 drop-shadow-xs">3.7 / 5</div>
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-2 pt-1 text-xs">
-                        <div class="bg-white/[0.07] border border-white/20 p-2.5 rounded-xl">
-                            <span class="text-cyan-50 text-[10px] block mb-0.5 font-medium">Teknik</span>
-                            <div id="storyTeknik" class="font-extrabold text-white text-base">4</div>
-                        </div>
-                        <div class="bg-white/[0.07] border border-white/20 p-2.5 rounded-xl">
-                            <span class="text-cyan-50 text-[10px] block mb-0.5 font-medium">Kecepatan</span>
-                            <div id="storyKecepatan" class="font-extrabold text-emerald-300 text-base">3</div>
-                        </div>
-                        <div class="bg-white/[0.07] border border-white/20 p-2.5 rounded-xl">
-                            <span class="text-cyan-50 text-[10px] block mb-0.5 font-medium">Ketahanan</span>
-                            <div id="storyKetahanan" class="font-extrabold text-amber-300 text-base">4</div>
-                        </div>
-                    </div>
-
-                    <p id="storyNote"
-                        class="text-xs italic text-white/95 pt-2.5 border-t border-white/20 leading-relaxed">
-                        "Progres bagus, perlu perbaiki start."
-                    </p>
-                </div>
-
                 <!-- Bottom Footer -->
                 <div class="relative z-10 pb-1">
-                    <p class="text-[11px] text-cyan-50 font-semibold tracking-wide opacity-90">gajahdepa.my.id</p>
+                    <p class="text-[11px] text-cyan-50 font-semibold tracking-wide opacity-90">gajahdepaakuatik.my.id
+                    </p>
                 </div>
             </div>
 
@@ -949,7 +925,7 @@
             // Footer URL
             ctx.fillStyle = 'rgba(224, 242, 254, 0.9)';
             ctx.font = '600 32px Inter, sans-serif';
-            ctx.fillText('gajahdepa.my.id', W / 2, H - 120);
+            ctx.fillText('gajahdepaakuatik.my.id', W / 2, H - 120);
 
             // Download PNG
             const link = document.createElement('a');

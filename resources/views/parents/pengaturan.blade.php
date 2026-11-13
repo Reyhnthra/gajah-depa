@@ -117,12 +117,16 @@
         <!-- Sidebar Footer -->
         <div class="p-4 border-t border-white/10 flex items-center justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
-                <div class="w-10 h-10 rounded-full bg-amber-400 text-amber-900 font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">
-                    {{ strtoupper(substr(Auth::user()->nama ?? 'HR', 0, 2)) }}
+                <div class="w-10 h-10 rounded-full bg-amber-400 text-amber-950 font-bold text-sm flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-amber-300">
+                    @if(!empty($siswa->foto) && file_exists(public_path($siswa->foto)))
+                        <img src="{{ asset($siswa->foto) }}" alt="{{ $siswa->nama ?? 'Foto Anak' }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($siswa->nama ?? (Auth::user()->nama ?? 'AN'), 0, 2)) }}
+                    @endif
                 </div>
                 <div class="truncate">
                     <div class="text-sm font-bold text-white truncate">{{ Auth::user()->nama ?? 'Hendra Rizki' }}</div>
-                    <div class="text-[11px] text-slate-300 truncate">Orang Tua</div>
+                    <div class="text-[11px] text-slate-300 truncate">Orang Tua dari {{ $siswa->nama ?? 'Anak' }}</div>
                 </div>
             </div>
 
@@ -148,29 +152,77 @@
             </div>
         @endif
 
+        @if(isset($errors) && $errors->any())
+            <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
+                <div class="flex items-center gap-2 mb-1 text-sm font-bold">
+                    <i class="fa-solid fa-circle-exclamation text-rose-500"></i>
+                    <span>Gagal Menyimpan Perubahan</span>
+                </div>
+                <ul class="list-disc list-inside space-y-0.5 text-rose-600">
+                    @foreach($errors->all() as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Header Page -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-[#008cc9] tracking-tight">Pengaturan Profil</h1>
-            <p class="text-sm text-slate-500 mt-1">Kelola data profil orang tua dan kata sandi akun Anda</p>
+            <p class="text-sm text-slate-500 mt-1">Kelola data profil orang tua, foto profil anak, dan kata sandi akun Anda</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             
             <!-- Left Column: Settings Form -->
             <div class="md:col-span-2 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100">
-                <form action="{{ route('parents.pengaturan.update') }}" method="POST" class="space-y-6">
+                <form action="{{ route('parents.pengaturan.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan data profil Anda?')">
                     @csrf
 
-                    <h3 class="text-base font-bold text-slate-800 border-b border-slate-100 pb-4 flex items-center gap-2">
+                    <!-- Section Foto Profil Anak -->
+                    <div class="bg-gradient-to-r from-sky-50 to-blue-50/40 border border-sky-100 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                        <div class="relative group shrink-0">
+                            <div id="fotoAnakPreviewContainer" class="w-20 h-20 rounded-full bg-amber-400 text-amber-950 font-black text-2xl flex items-center justify-center border-2 border-amber-300 shadow-md overflow-hidden">
+                                @if(!empty($siswa->foto) && file_exists(public_path($siswa->foto)))
+                                    <img id="fotoAnakPreviewImg" src="{{ asset($siswa->foto) }}" alt="{{ $siswa->nama ?? 'Foto Anak' }}" class="w-full h-full object-cover">
+                                @else
+                                    <span id="fotoAnakInitials">{{ strtoupper(substr($siswa->nama ?? 'AR', 0, 2)) }}</span>
+                                @endif
+                            </div>
+                            <label for="fotoAnakInput" class="absolute bottom-0 right-0 w-7 h-7 bg-[#00a5ec] hover:bg-[#008cc9] text-white rounded-full flex items-center justify-center shadow-md cursor-pointer transition" title="Pilih Foto Anak">
+                                <i class="fa-solid fa-camera text-xs"></i>
+                            </label>
+                        </div>
+
+                        <div class="flex-1 text-center sm:text-left">
+                            <div class="flex items-center justify-center sm:justify-start gap-2">
+                                <h4 class="text-sm font-bold text-slate-800">Foto Profil Anak ({{ $siswa->nama ?? 'Nama Anak' }})</h4>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-[#008cc9]">Foto Profil</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Gunakan foto anak yang jelas. Format: JPG, JPEG, PNG, atau WEBP (Maks. 3MB).</p>
+                            
+                            <div class="mt-3 flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                                <label for="fotoAnakInput" class="px-3.5 py-1.5 bg-[#00a5ec] hover:bg-[#008cc9] text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs transition inline-flex items-center gap-2">
+                                    <i class="fa-solid fa-upload text-[11px]"></i>
+                                    <span>Pilih / Ganti Foto</span>
+                                </label>
+                                <span id="fotoAnakFileName" class="text-[11px] text-slate-500 italic truncate max-w-[200px]">Belum ada file baru dipilih</span>
+                            </div>
+                            <input type="file" id="fotoAnakInput" name="foto_anak" accept="image/jpeg,image/png,image/jpg,image/webp" class="hidden" onchange="previewFotoAnak(event)">
+                            <input type="hidden" name="id_siswa" value="{{ $siswa->id ?? '' }}">
+                        </div>
+                    </div>
+
+                    <h3 class="text-base font-bold text-slate-800 border-b border-slate-100 pb-4 pt-2 flex items-center gap-2">
                         <i class="fa-regular fa-user text-[#00a5ec]"></i>
-                        <span>Informasi Profil</span>
+                        <span>Informasi Profil Orang Tua</span>
                     </h3>
 
                     <!-- Nama Lengkap -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-2">Nama Lengkap</label>
                         <input type="text" name="nama" value="{{ old('nama', $user->nama ?? 'Hendra Rizki') }}" required
-                               class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
+                                class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
                     </div>
 
                     <!-- Email & No HP -->
@@ -178,12 +230,12 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-2">Email</label>
                             <input type="email" name="email" value="{{ old('email', $user->email ?? 'orangtua@gajahdepa.com') }}" required
-                                   class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
+                                    class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-2">No. WhatsApp / HP</label>
                             <input type="text" name="no_hp" value="{{ old('no_hp', $user->no_hp ?? '081234567890') }}"
-                                   class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
+                                    class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
                         </div>
                     </div>
 
@@ -203,13 +255,13 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-2">Kata Sandi Baru</label>
                             <input type="password" name="password" placeholder="Min. 8 karakter (huruf besar, kecil & angka)"
-                                   class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
+                                    class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
                             <p class="text-[11px] text-slate-400 mt-1">Kosongkan jika tidak diubah. Jika diisi, min. 8 karakter (huruf besar, kecil, angka).</p>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-2">Konfirmasi Kata Sandi</label>
                             <input type="password" name="password_confirmation" placeholder="Ulangi kata sandi baru"
-                                   class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
+                                    class="w-full bg-slate-100/80 border border-slate-200 text-slate-800 text-xs rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-[#00a5ec]">
                         </div>
                     </div>
 
@@ -228,12 +280,25 @@
                     <div class="text-[10px] font-bold text-sky-300 uppercase tracking-widest opacity-80 mb-2">PROFIL ANAK TERHUBUNG</div>
                     
                     <div class="flex items-center gap-4 mb-4">
-                        <div class="w-14 h-14 rounded-full bg-amber-400 text-amber-950 font-black text-xl flex items-center justify-center border-2 border-amber-300 shadow-md shrink-0">
-                            {{ strtoupper(substr($siswa->nama ?? 'AR', 0, 2)) }}
+                        <div class="relative shrink-0">
+                            <div id="fotoAnakRightCard" class="w-16 h-16 rounded-full bg-amber-400 text-amber-950 font-black text-xl flex items-center justify-center border-2 border-amber-300 shadow-md shrink-0 overflow-hidden">
+                                @if(!empty($siswa->foto) && file_exists(public_path($siswa->foto)))
+                                    <img src="{{ asset($siswa->foto) }}" alt="{{ $siswa->nama ?? 'Anak' }}" class="w-full h-full object-cover">
+                                @else
+                                    {{ strtoupper(substr($siswa->nama ?? 'AR', 0, 2)) }}
+                                @endif
+                            </div>
+                            <label for="fotoAnakInput" class="absolute -bottom-1 -right-1 w-6 h-6 bg-amber-400 hover:bg-amber-300 text-amber-950 rounded-full flex items-center justify-center shadow-md cursor-pointer transition text-[10px] font-bold" title="Ubah Foto Anak">
+                                <i class="fa-solid fa-camera"></i>
+                            </label>
                         </div>
-                        <div>
-                            <h4 class="text-lg font-bold text-white">{{ $siswa->nama ?? 'Ahmad Rizki' }}</h4>
+                        <div class="min-w-0">
+                            <h4 class="text-base font-bold text-white truncate">{{ $siswa->nama ?? 'Ahmad Rizki' }}</h4>
                             <p class="text-xs text-sky-200">{{ ucfirst($siswa->nama_kelas ?? 'Pemula A') }}</p>
+                            <label for="fotoAnakInput" class="text-[11px] text-amber-300 hover:underline cursor-pointer font-medium mt-0.5 inline-flex items-center gap-1">
+                                <i class="fa-solid fa-camera text-[10px]"></i>
+                                <span>Ubah Foto</span>
+                            </label>
                         </div>
                     </div>
 
@@ -281,8 +346,12 @@
 
             <!-- Top Profile Card Badge (Light Sky Blue Container) -->
             <div class="bg-[#f0f9ff] border border-sky-200/70 rounded-2xl p-4 flex items-center gap-4 mb-6">
-                <div class="w-14 h-14 rounded-full bg-[#00a5ec] text-white font-black text-lg flex items-center justify-center shrink-0 shadow-sm">
-                    {{ strtoupper(substr($siswa->nama ?? 'AR', 0, 2)) }}
+                <div class="w-14 h-14 rounded-full bg-amber-400 text-amber-950 font-black text-lg flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-amber-300">
+                    @if(!empty($siswa->foto) && file_exists(public_path($siswa->foto)))
+                        <img src="{{ asset($siswa->foto) }}" alt="{{ $siswa->nama ?? 'Foto Anak' }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($siswa->nama ?? 'AR', 0, 2)) }}
+                    @endif
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
@@ -384,6 +453,28 @@
 
         function closeDataAnakModal() {
             document.getElementById('modalDataAnak').classList.add('hidden');
+        }
+
+        function previewFotoAnak(event) {
+            const input = event.target;
+            const file = input.files && input.files[0];
+            const fileNameSpan = document.getElementById('fotoAnakFileName');
+            const previewContainer = document.getElementById('fotoAnakPreviewContainer');
+            const rightCard = document.getElementById('fotoAnakRightCard');
+
+            if (file) {
+                if (fileNameSpan) fileNameSpan.innerText = file.name;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (previewContainer) {
+                        previewContainer.innerHTML = `<img src="${e.target.result}" alt="Preview Foto Anak" class="w-full h-full object-cover">`;
+                    }
+                    if (rightCard) {
+                        rightCard.innerHTML = `<img src="${e.target.result}" alt="Preview Foto Anak" class="w-full h-full object-cover">`;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
         }
     </script>
 

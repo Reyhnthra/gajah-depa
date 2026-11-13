@@ -182,12 +182,16 @@
         <div class="p-4 border-t border-white/10 flex items-center justify-between">
             <div class="flex items-center gap-3 overflow-hidden">
                 <div
-                    class="w-10 h-10 rounded-full bg-amber-400 text-amber-900 font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">
-                    {{ strtoupper(substr(Auth::user()->nama ?? 'HR', 0, 2)) }}
+                    class="w-10 h-10 rounded-full bg-amber-400 text-amber-950 font-bold text-sm flex items-center justify-center shrink-0 shadow-sm overflow-hidden border border-amber-300">
+                    @if(!empty($siswa->foto) && file_exists(public_path($siswa->foto)))
+                        <img src="{{ asset($siswa->foto) }}" alt="{{ $siswa->nama ?? 'Foto Anak' }}" class="w-full h-full object-cover">
+                    @else
+                        {{ strtoupper(substr($siswa->nama ?? (Auth::user()->nama ?? 'AN'), 0, 2)) }}
+                    @endif
                 </div>
                 <div class="truncate">
                     <div class="text-sm font-bold text-white truncate">{{ Auth::user()->nama ?? 'Hendra Rizki' }}</div>
-                    <div class="text-[11px] text-slate-300 truncate">Orang Tua</div>
+                    <div class="text-[11px] text-slate-300 truncate">Orang Tua dari {{ $siswa->nama ?? 'Anak' }}</div>
                 </div>
             </div>
 
@@ -271,37 +275,54 @@
                     </div>
                 </div>
                 <div>
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="w-11 h-11 sm:w-14 sm:h-14 rounded-full p-0.5 border-2 border-amber-400 shrink-0 overflow-hidden bg-sky-50 flex items-center justify-center shadow-xs">
-                            @if(!empty($bestMember->foto) && file_exists(public_path($bestMember->foto)))
-                                <img src="{{ asset($bestMember->foto) }}" alt="{{ $bestMember->nama }}"
-                                    class="w-full h-full rounded-full object-cover">
-                            @elseif(!empty($bestMember->foto) && file_exists(public_path('storage/' . $bestMember->foto)))
-                                <img src="{{ asset('storage/' . $bestMember->foto) }}" alt="{{ $bestMember->nama }}"
-                                    class="w-full h-full rounded-full object-cover">
-                            @else
-                                <div
-                                    class="w-full h-full rounded-full bg-gradient-to-br from-[#00b4db] to-[#0083b0] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center">
-                                    {{ strtoupper(substr($bestMember->nama ?? 'AR', 0, 2)) }}
-                                </div>
-                            @endif
+                    @if($bestMember)
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-11 h-11 sm:w-14 sm:h-14 rounded-full p-0.5 border-2 border-amber-400 shrink-0 overflow-hidden bg-sky-50 flex items-center justify-center shadow-xs">
+                                @if(!empty($bestMember->foto) && file_exists(public_path($bestMember->foto)))
+                                    <img src="{{ asset($bestMember->foto) }}" alt="{{ $bestMember->nama }}"
+                                        class="w-full h-full rounded-full object-cover">
+                                @elseif(!empty($bestMember->foto) && file_exists(public_path('storage/' . $bestMember->foto)))
+                                    <img src="{{ asset('storage/' . $bestMember->foto) }}" alt="{{ $bestMember->nama }}"
+                                        class="w-full h-full rounded-full object-cover">
+                                @else
+                                    <div
+                                        class="w-full h-full rounded-full bg-gradient-to-br from-[#00b4db] to-[#0083b0] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center">
+                                        {{ strtoupper(substr($bestMember->nama ?? 'BM', 0, 2)) }}
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-sm sm:text-lg font-extrabold text-[#008cc9] leading-tight truncate">
+                                    {{ $bestMember->nama }}</div>
+                                <div class="text-[11px] sm:text-xs text-slate-400 mt-0.5 truncate">
+                                    {{ $namaBulan ?? 'Bulan Ini' }} {{ $tahun ?? date('Y') }} ·
+                                    {{ $bestMember->nama_cabang ?? $siswa->nama_cabang ?? 'Gajah Depa' }}</div>
+                            </div>
                         </div>
-                        <div class="min-w-0 flex-1">
-                            <div class="text-sm sm:text-lg font-extrabold text-[#008cc9] leading-tight truncate">
-                                {{ $bestMember->nama ?? 'Ahmad Rizki' }}</div>
-                            <div class="text-[11px] sm:text-xs text-slate-400 mt-0.5 truncate">
-                                {{ $namaBulan ?? 'Oktober' }} {{ $tahun ?? date('Y') }} ·
-                                {{ $bestMember->nama_cabang ?? $siswa->nama_cabang ?? 'Gajah Depa' }}</div>
-                        </div>
-                    </div>
 
-                    @if($isBestMember ?? false)
-                        <button type="button" onclick="openBestMemberModal()"
-                            class="mt-3 w-full py-2 px-3 bg-gradient-to-r from-[#00b4db] to-[#0083b0] hover:from-[#00a0c4] hover:to-[#007198] text-white text-[11px] sm:text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                            <span>Lihat Ucapan</span>
-                        </button>
+                        @if($isBestMember ?? false)
+                            <button type="button" onclick="openBestMemberModal()"
+                                class="mt-3 w-full py-2 px-3 bg-gradient-to-r from-[#00b4db] to-[#0083b0] hover:from-[#00a0c4] hover:to-[#007198] text-white text-[11px] sm:text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span>Lihat Ucapan</span>
+                            </button>
+                        @endif
+                    @else
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-11 h-11 sm:w-14 sm:h-14 rounded-full border-2 border-dashed border-amber-300 shrink-0 bg-amber-50/60 flex items-center justify-center text-amber-500 shadow-2xs">
+                                <i class="fa-solid fa-user-clock text-base sm:text-lg"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-sm sm:text-base font-bold text-slate-400 leading-tight truncate">
+                                    Belum Ditetapkan
+                                </div>
+                                <div class="text-[11px] sm:text-xs text-slate-400 mt-0.5 truncate flex items-center">
+                                    <span class="w-2 h-2 rounded-full bg-slate-300 mr-1.5 shrink-0"></span> {{ $namaBulan ?? 'Bulan Ini' }} {{ $tahun ?? date('Y') }} · {{ $siswa->nama_cabang ?? 'Gajah Depa' }}
+                                </div>
+                            </div>
+                        </div>
                     @endif
                 </div>
             </div>

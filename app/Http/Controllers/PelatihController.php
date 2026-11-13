@@ -680,7 +680,8 @@ class PelatihController extends Controller
                 'users.no_hp as no_hp_parent',
                 'parents.alamat as alamat_parent'
             )
-            ->where('siswa.id_cabang', $idCabang);
+            ->where('siswa.id_cabang', $idCabang)
+            ->orderBy('siswa.nama', 'asc');
 
         // Filter berdasarkan pencarian nama siswa
         if ($search) {
@@ -731,6 +732,8 @@ class PelatihController extends Controller
 
         $absensiSiswaList = $absensiQuery
             ->orderBy('absensi_siswa.tanggal_kehadiran', 'desc')
+            ->orderBy('kelas.nama', 'asc')
+            ->orderBy('siswa.nama', 'asc')
             ->get();
 
         // Data Grafik Absensi Siswa
@@ -781,11 +784,14 @@ class PelatihController extends Controller
         $penilaianQuery = DB::table('pencapaian_siswa')
             ->join('siswa', 'pencapaian_siswa.id_siswa', '=', 'siswa.id')
             ->leftJoin('kelas', 'siswa.id_kelas', '=', 'kelas.id')
+            ->leftJoin('pelatih', 'pencapaian_siswa.id_pelatih', '=', 'pelatih.id')
+            ->leftJoin('users as user_pelatih', 'pelatih.id_user', '=', 'user_pelatih.id')
             ->select(
                 'pencapaian_siswa.*',
                 'siswa.nama as nama_siswa',
                 'siswa.id_kelas',
-                'kelas.nama as nama_kelas'
+                'kelas.nama as nama_kelas',
+                'user_pelatih.nama as nama_pelatih'
             )
             ->where('siswa.id_cabang', $idCabang);
 
@@ -805,6 +811,8 @@ class PelatihController extends Controller
 
         $penilaianList = $penilaianQuery
             ->orderBy('pencapaian_siswa.tanggal_catat', 'desc')
+            ->orderBy('kelas.nama', 'asc')
+            ->orderBy('siswa.nama', 'asc')
             ->get();
 
         // Data absensi cabang untuk validasi siswa yang sudah absen per tanggal
@@ -839,8 +847,10 @@ class PelatihController extends Controller
 
         $pencapaian_per_siswa = DB::table('pencapaian_siswa')
             ->join('siswa', 'pencapaian_siswa.id_siswa', '=', 'siswa.id')
+            ->leftJoin('pelatih', 'pencapaian_siswa.id_pelatih', '=', 'pelatih.id')
+            ->leftJoin('users as user_pelatih', 'pelatih.id_user', '=', 'user_pelatih.id')
             ->where('siswa.id_cabang', $idCabang)
-            ->select('pencapaian_siswa.id_siswa', 'pencapaian_siswa.gaya_renang', 'pencapaian_siswa.catatan_waktu', 'pencapaian_siswa.teknik', 'pencapaian_siswa.kecepatan', 'pencapaian_siswa.ketahanan', 'pencapaian_siswa.catatan', 'pencapaian_siswa.kejuaraan', 'pencapaian_siswa.tanggal_catat')
+            ->select('pencapaian_siswa.id_siswa', 'pencapaian_siswa.gaya_renang', 'pencapaian_siswa.catatan_waktu', 'pencapaian_siswa.teknik', 'pencapaian_siswa.kecepatan', 'pencapaian_siswa.ketahanan', 'pencapaian_siswa.catatan', 'pencapaian_siswa.kejuaraan', 'pencapaian_siswa.tanggal_catat', 'user_pelatih.nama as nama_pelatih')
             ->orderBy('pencapaian_siswa.tanggal_catat', 'desc')
             ->get()
             ->groupBy('id_siswa');
@@ -864,6 +874,7 @@ class PelatihController extends Controller
         rsort($listTahun);
 
         return view('pelatih.siswa', compact(
+            'pelatihId',
             'activeTab',
             'namaCabang',
             'kelasList',
@@ -1068,8 +1079,12 @@ class PelatihController extends Controller
             $waktu = $request->catatan_waktu;
         }
 
+        $data = $this->getPelatihAndCabang();
+        $pelatihId = $data['pelatihId'];
+
         DB::table('pencapaian_siswa')->insert([
             'id_siswa'       => $idSiswa,
+            'id_pelatih'     => $pelatihId,
             'gaya_renang'    => $request->gaya_renang,
             'catatan_waktu'  => $waktu,
             'teknik'         => $request->teknik,
@@ -1103,6 +1118,20 @@ class PelatihController extends Controller
         if (!$penilaian) {
             return redirect()->route('pelatih.siswa', ['tab' => 'penilaian_siswa'])
                 ->with('error', 'Data penilaian tidak ditemukan.');
+        }
+
+        $data = $this->getPelatihAndCabang();
+        $pelatihId = $data['pelatihId'];
+
+        // Cek hak akses: hanya pelatih yang menilai yang dapat mengubah
+        if (!empty($penilaian->id_pelatih) && (int)$penilaian->id_pelatih !== (int)$pelatihId) {
+            $pembuat = DB::table('pelatih')
+                ->join('users', 'pelatih.id_user', '=', 'users.id')
+                ->where('pelatih.id', $penilaian->id_pelatih)
+                ->value('users.nama') ?? 'pelatih lain';
+
+            return redirect()->route('pelatih.siswa', ['tab' => 'penilaian_siswa', 'id_kelas' => $request->input('filter_kelas', $penilaian->id_kelas ?? null)])
+                ->with('error', "Akses Ditolak: Penilaian ini dinilai oleh {$pembuat}. Anda tidak dapat mengubah penilaian dari pelatih lain.");
         }
 
         $siswa = DB::table('siswa')->where('id', $penilaian->id_siswa)->first();
@@ -1145,9 +1174,19 @@ class PelatihController extends Controller
                 ->with('error', 'Data penilaian tidak ditemukan.');
         }
 
-        $siswa = DB::table('siswa')->where('id', $penilaian->id_siswa)->first();
-        $namaSiswa = $siswa->nama ?? 'Siswa';
-        $idKelas = $siswa->id_kelas ?? null;
+        $data = $this->getPelatihAndCabang();
+        $pelatihId = $data['pelatihId'];
+
+        // Cek hak akses: hanya pelatih yang menilai yang dapat menghapus
+        if (!empty($penilaian->id_pelatih) && (int)$penilaian->id_pelatih !== (int)$pelatihId) {
+            $pembuat = DB::table('pelatih')
+                ->join('users', 'pelatih.id_user', '=', 'users.id')
+                ->where('pelatih.id', $penilaian->id_pelatih)
+                ->value('users.nama') ?? 'pelatih lain';
+
+            return redirect()->route('pelatih.siswa', ['tab' => 'penilaian_siswa', 'id_kelas' => $request->input('filter_kelas', $penilaian->id_kelas ?? null)])
+                ->with('error', "Akses Ditolak: Penilaian ini dinilai oleh {$pembuat}. Anda tidak dapat menghapus penilaian dari pelatih lain.");
+        }
 
         DB::table('pencapaian_siswa')->where('id', $id)->delete();
 
