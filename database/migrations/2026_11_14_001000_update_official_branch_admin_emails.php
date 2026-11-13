@@ -39,3 +39,4 @@ return new class extends Migration
         // Tidak membalikkan email resmi admin cabang
     }
 };
+

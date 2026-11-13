@@ -277,7 +277,7 @@
                 </div>
                 <div>
                     <div class="text-2xl sm:text-3xl font-extrabold text-slate-800 flex items-center gap-1.5">
-                        <span>{{ $avgRating ?? 5.0 }}</span>
+                        <span>{{ $avgRating ?? 0 }}</span>
                         <i class="fa-solid fa-star text-lg sm:text-2xl text-amber-400"></i>
                     </div>
                     <div class="text-[11px] sm:text-xs text-slate-400 mt-1 truncate">dari {{ $totalUlasan ?? 0 }} ulasan

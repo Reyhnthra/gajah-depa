@@ -310,7 +310,7 @@ class PelatihController extends Controller
         // Metric 3: Rating Saya
         $ulasanQuery = DB::table('ulasan_pelatih')->where('id_pelatih', $pelatihId);
         $totalUlasan = (clone $ulasanQuery)->count();
-        $avgRating   = $totalUlasan > 0 ? round((clone $ulasanQuery)->avg('bintang_rating'), 1) : 5.0;
+        $avgRating   = $totalUlasan > 0 ? round((clone $ulasanQuery)->avg('bintang_rating'), 1) : 0;
 
         // Grafik Kehadiran Siswa di Cabang ini
         $chartQuery = DB::table('absensi_siswa')
@@ -928,7 +928,7 @@ class PelatihController extends Controller
 
             $reviews = (clone $reviewsQuery)->orderBy('ulasan_club.created_at', 'desc')->get();
             $totalUlasan = (clone $reviewsQuery)->count();
-            $avgRating = $totalUlasan > 0 ? round((clone $reviewsQuery)->avg('bintang_rating'), 1) : 4.3;
+            $avgRating = $totalUlasan > 0 ? round((clone $reviewsQuery)->avg('bintang_rating'), 1) : 0;
             $positiveCount = (clone $reviewsQuery)->where('bintang_rating', '>=', 4)->count();
 
             // Distribusi Rating (5 s/d 1)
@@ -954,7 +954,7 @@ class PelatihController extends Controller
 
             $reviews = (clone $reviewsQuery)->orderBy('ulasan_pelatih.created_at', 'desc')->get();
             $totalUlasan = (clone $reviewsQuery)->count();
-            $avgRating = $totalUlasan > 0 ? round((clone $reviewsQuery)->avg('bintang_rating'), 1) : 4.3;
+            $avgRating = $totalUlasan > 0 ? round((clone $reviewsQuery)->avg('bintang_rating'), 1) : 0;
             $positiveCount = (clone $reviewsQuery)->where('bintang_rating', '>=', 4)->count();
 
             // Distribusi Rating (5 s/d 1)

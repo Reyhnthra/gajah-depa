@@ -513,9 +513,9 @@ class ParentsController extends Controller
             ];
         } else {
             $lastGrade = [
-                'score' => 3.7,
-                'gaya'  => 'Gaya Bebas',
-                'date'  => '15 Jun',
+                'score' => 0,
+                'gaya'  => '-',
+                'date'  => '-',
             ];
         }
 
