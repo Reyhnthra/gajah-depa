@@ -36,7 +36,7 @@ class CabangSeeder extends Seeder
                 'id' => 3,
                 'nama' => 'Gajah Depa Cimanggung',
                 'alamat' => 'Kolam Renang Cibogo Indah',
-                'email' => 'fajaran16@gmail.com',
+                'email' => 'gdascimanggung@gmail.com',
                 'no_whatsapp' => '0896-1673-2799',
                 'info_pendaftaran' => '150.000 include jersey',
                 'no_rekening' => 'BCA 7741150917 Fajar Adhi Nugraha',

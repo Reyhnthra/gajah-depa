@@ -15,7 +15,7 @@ return new class extends Migration
         DB::table('users')->where('id', 7)->update([
             'nama' => 'Gajah Depa Akuatik Sumedang',
             'no_hp' => '081312303829',
-            'email' => 'akuatiksumedanggajahdepa@gmail.com',
+            'email' => 'Akutiksumedanggajahdepa@gmail.com',
             'jenis_kelamin' => 'perempuan',
             'password' => Hash::make('Password123'),
             'role' => 'admin',
@@ -39,7 +39,7 @@ return new class extends Migration
         DB::table('users')->where('id', 10)->update([
             'nama' => 'Gajah Depa Akuatik Cimanggung',
             'no_hp' => '081234567899',
-            'email' => 'admin.cimanggung@gajahdepa.com',
+            'email' => 'gdascimanggung@gmail.com',
             'jenis_kelamin' => 'laki-laki',
             'password' => Hash::make('Password123'),
             'role' => 'admin',
