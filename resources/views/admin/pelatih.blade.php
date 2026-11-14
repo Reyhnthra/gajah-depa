@@ -858,7 +858,7 @@
 
                 <!-- ===== TAB: EDIT ===== -->
                 <div id="tabEdit" class="p-5 hidden">
-                    <form id="formEditPelatih" method="POST" action="" enctype="multipart/form-data" class="space-y-4 text-xs" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan data profil pelatih ini?')">
+                    <form id="formEditPelatih" method="POST" action="" enctype="multipart/form-data" class="space-y-4 text-xs" data-confirm="Apakah Anda yakin ingin menyimpan perubahan data profil pelatih ini?">
                         @csrf
                         <input type="hidden" name="_method" value="POST">
 
@@ -1098,7 +1098,7 @@
                 </button>
             </div>
 
-            <form id="formEditAbsensiPelatih" method="POST" action="" class="space-y-4 text-xs" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan data absensi pelatih ini?')">
+            <form id="formEditAbsensiPelatih" method="POST" action="" class="space-y-4 text-xs" data-confirm="Apakah Anda yakin ingin menyimpan perubahan data absensi pelatih ini?">
                 @csrf
                 <input type="hidden" name="id" id="editAbsensiId">
 

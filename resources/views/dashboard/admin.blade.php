@@ -1178,7 +1178,7 @@
                                 Best Member untuk bulan <span class="font-bold">{{ $namaBulanIni }} {{ $tahunIni }}</span> sudah resmi ditetapkan.
                             </div>
                         </div>
-                        <form action="{{ route('admin.best_swimmer.reset') }}" method="POST" class="m-0 shrink-0" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan/mereset penetapan Best Member bulan ini? Status akan kembali menjadi Belum Ditetapkan.')">
+                        <form action="{{ route('admin.best_swimmer.reset') }}" method="POST" class="m-0 shrink-0" data-confirm="Apakah Anda yakin ingin membatalkan/mereset penetapan Best Member bulan ini? Status akan kembali menjadi Belum Ditetapkan.">
                             @csrf
                             <input type="hidden" name="tahun" value="{{ $tahunIni }}">
                             <input type="hidden" name="bulan" value="{{ $bulanIni }}">
@@ -1290,7 +1290,7 @@
                                             <i class="fa-solid fa-lock text-[10px]"></i> Terkunci
                                         </div>
                                     @else
-                                        <form action="{{ route('admin.best_swimmer.store') }}" method="POST" class="w-full sm:w-auto m-0" onsubmit="return confirm('Apakah Anda yakin ingin menetapkan {{ $k->nama }} sebagai Best Member of the Month? Pilihan ini hanya dapat dilakukan 1 kali dan tidak dapat diganti selama sebulan.')">
+                                        <form action="{{ route('admin.best_swimmer.store') }}" method="POST" class="w-full sm:w-auto m-0" data-confirm="Apakah Anda yakin ingin menetapkan {{ $k->nama }} sebagai Best Member of the Month? Pilihan ini hanya dapat dilakukan 1 kali dan tidak dapat diganti selama sebulan.">
                                             @csrf
                                             <input type="hidden" name="id_siswa" value="{{ $k->id }}">
                                             <input type="hidden" name="tahun" value="{{ $tahunIni }}">
@@ -1318,7 +1318,7 @@
                         <span class="w-2 h-2 rounded-full bg-slate-400"></span>
                         <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Atau Pilih Siswa Lainnya di Cabang Ini</h4>
                     </div>
-                    <form action="{{ route('admin.best_swimmer.store') }}" method="POST" class="space-y-3" onsubmit="return confirm('Apakah Anda yakin ingin menetapkan siswa pilihan Anda sebagai Best Member? Pilihan ini hanya dapat dilakukan 1 kali dan tidak dapat diganti selama sebulan.')">
+                    <form action="{{ route('admin.best_swimmer.store') }}" method="POST" class="space-y-3" data-confirm="Apakah Anda yakin ingin menetapkan siswa pilihan Anda sebagai Best Member? Pilihan ini hanya dapat dilakukan 1 kali dan tidak dapat diganti selama sebulan.">
                         @csrf
                         <input type="hidden" name="tahun" value="{{ $tahunIni }}">
                         <input type="hidden" name="bulan" value="{{ $bulanIni }}">

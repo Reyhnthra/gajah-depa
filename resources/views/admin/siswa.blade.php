@@ -1282,7 +1282,7 @@
 
                 <!-- ===== TAB 4: EDIT DATA SISWA ===== -->
                 <div id="tabSiswaEdit" class="hidden">
-                    <form id="formEditSiswa" method="POST" action="" enctype="multipart/form-data" class="space-y-4 text-xs" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan data profil siswa ini?')">
+                    <form id="formEditSiswa" method="POST" action="" enctype="multipart/form-data" class="space-y-4 text-xs" data-confirm="Apakah Anda yakin ingin menyimpan perubahan data profil siswa ini?">
                         @csrf
                         <input type="hidden" name="_method" value="POST">
 

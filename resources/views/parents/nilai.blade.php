@@ -196,7 +196,7 @@
                         </p>
                     </div>
                 @else
-                    <form action="{{ route('parents.nilai_pelatih.store') }}" method="POST" class="space-y-6" onsubmit="return confirm('Apakah Anda yakin ingin mengirim penilaian untuk pelatih ini?')">
+                    <form action="{{ route('parents.nilai_pelatih.store') }}" method="POST" class="space-y-6" data-confirm="Apakah Anda yakin ingin mengirim penilaian untuk pelatih ini?">
                         @csrf
                         
                         @php
@@ -378,7 +378,7 @@
                 $clubTanggal = $clubReviewThisMonth ? \Carbon\Carbon::parse($clubReviewThisMonth->created_at)->translatedFormat('d F Y, H:i') : '';
             @endphp
             <div class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 w-full">
-                <form action="{{ route('parents.nilai_club.store') }}" method="POST" class="space-y-6" onsubmit="return confirm('Apakah Anda yakin ingin mengirim penilaian untuk club ini?')">
+                <form action="{{ route('parents.nilai_club.store') }}" method="POST" class="space-y-6" data-confirm="Apakah Anda yakin ingin mengirim penilaian untuk club ini?">
                     @csrf
 
                     <!-- Club Header Badge -->

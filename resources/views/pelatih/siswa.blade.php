@@ -1003,7 +1003,7 @@
                 <p id="editPenilaianSubtitle" class="text-slate-500 text-sm mt-1">Perbarui nilai perkembangan siswa</p>
             </div>
 
-            <form id="editPenilaianForm" method="POST" class="space-y-4" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan penilaian siswa ini?')">
+            <form id="editPenilaianForm" method="POST" class="space-y-4" data-confirm="Apakah Anda yakin ingin menyimpan perubahan penilaian siswa ini?">
                 @csrf
                 <input type="hidden" name="filter_kelas" value="{{ $selectedKelasId ?? 'semua' }}">
 

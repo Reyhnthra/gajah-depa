@@ -176,7 +176,7 @@
             
             <!-- Left Column: Settings Form -->
             <div class="md:col-span-2 bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100">
-                <form action="{{ route('parents.pengaturan.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan data profil Anda?')">
+                <form action="{{ route('parents.pengaturan.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6" data-confirm="Apakah Anda yakin ingin menyimpan perubahan data profil Anda?">
                     @csrf
 
                     <!-- Section Foto Profil Anak -->

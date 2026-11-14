@@ -22,14 +22,34 @@
     </div>
 </div>
 
+<!-- Global Web Confirmation Modal -->
+<div id="webConfirmModal" class="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-labelledby="webConfirmTitle" onclick="if (event.target === this) closeWebConfirmModal()">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-100 max-w-sm w-full p-6 text-center animate-in fade-in zoom-in-95 duration-200">
+        <div id="webConfirmIconBox" class="w-14 h-14 bg-sky-50 text-[#00a5ec] rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg id="webConfirmIcon" class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        <h3 id="webConfirmTitle" class="text-lg font-extrabold text-slate-800">Konfirmasi Tindakan</h3>
+        <p id="webConfirmMessage" class="text-xs text-slate-500 mt-1.5 leading-relaxed">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+        <div class="grid grid-cols-2 gap-3 mt-6">
+            <button type="button" onclick="closeWebConfirmModal()" class="w-full py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 transition">Batal</button>
+            <button type="button" id="webConfirmSubmitBtn" onclick="proceedWebConfirmModal()" class="w-full py-2.5 rounded-xl bg-[#00a5ec] text-white text-xs font-bold hover:bg-[#0092d1] transition shadow-xs">Ya, Lanjutkan</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    let _pendingConfirmForm = null;
+    let _pendingConfirmSubmitter = null;
+
     function openLogoutModal() {
         const m = document.getElementById('logoutModal');
         if (m) {
             m.classList.remove('hidden');
-        } else if (confirm('Apakah Anda yakin ingin keluar dari akun ini?')) {
+        } else {
             const form = document.querySelector('form[action*="logout"]');
-            if (form) form.submit();
+            if (form) openWebConfirmModal(form, 'Apakah Anda yakin ingin keluar dari akun ini?', 'Konfirmasi Keluar');
         }
     }
 
@@ -38,8 +58,93 @@
         if (m) m.classList.add('hidden');
     }
 
+    function openWebConfirmModal(form, message, title, submitter) {
+        const m = document.getElementById('webConfirmModal');
+        if (!m) return;
+
+        _pendingConfirmForm = form;
+        _pendingConfirmSubmitter = submitter || null;
+
+        const msgEl = document.getElementById('webConfirmMessage');
+        const titleEl = document.getElementById('webConfirmTitle');
+        const iconBox = document.getElementById('webConfirmIconBox');
+        const iconEl = document.getElementById('webConfirmIcon');
+        const submitBtn = document.getElementById('webConfirmSubmitBtn');
+
+        const msg = message || 'Apakah Anda yakin ingin melanjutkan tindakan ini?';
+        if (msgEl) msgEl.textContent = msg;
+
+        const isDanger = /hapus|batal|reset/i.test(msg);
+        const isSend = /mengirim|penilaian/i.test(msg);
+
+        if (titleEl) {
+            titleEl.textContent = title || (isDanger ? 'Konfirmasi Tindakan' : (isSend ? 'Konfirmasi Pengiriman' : 'Konfirmasi Simpan Perubahan'));
+        }
+
+        if (iconBox && iconEl && submitBtn) {
+            if (isDanger) {
+                iconBox.className = 'w-14 h-14 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4';
+                submitBtn.className = 'w-full py-2.5 rounded-xl bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 transition shadow-xs';
+                iconEl.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>';
+            } else {
+                iconBox.className = 'w-14 h-14 bg-sky-50 text-[#00a5ec] rounded-full flex items-center justify-center mx-auto mb-4';
+                submitBtn.className = 'w-full py-2.5 rounded-xl bg-[#00a5ec] text-white text-xs font-bold hover:bg-[#0092d1] transition shadow-xs';
+                iconEl.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+            }
+        }
+
+        m.classList.remove('hidden');
+    }
+
+    function closeWebConfirmModal() {
+        const m = document.getElementById('webConfirmModal');
+        if (m) m.classList.add('hidden');
+        _pendingConfirmForm = null;
+        _pendingConfirmSubmitter = null;
+    }
+
+    function proceedWebConfirmModal() {
+        const form = _pendingConfirmForm;
+        const submitter = _pendingConfirmSubmitter;
+        closeWebConfirmModal();
+        if (!form) return;
+
+        form.dataset.webConfirmed = '1';
+        if (typeof form.requestSubmit === 'function') {
+            if (submitter && form.contains(submitter) && !submitter.disabled) {
+                form.requestSubmit(submitter);
+            } else {
+                form.requestSubmit();
+            }
+        } else {
+            HTMLFormElement.prototype.submit.call(form);
+        }
+    }
+
+    if (!window.__webConfirmInitialized) {
+        window.__webConfirmInitialized = true;
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            if (!(form instanceof HTMLFormElement)) return;
+            const msg = form.getAttribute('data-confirm');
+            if (!msg) return;
+
+            if (form.dataset.webConfirmed === '1') {
+                delete form.dataset.webConfirmed;
+                return;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+            openWebConfirmModal(form, msg, form.getAttribute('data-confirm-title'), e.submitter || null);
+        }, true);
+    }
+
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeLogoutModal();
+        if (e.key === 'Escape') {
+            closeLogoutModal();
+            closeWebConfirmModal();
+        }
     });
 
     document.addEventListener('DOMContentLoaded', function() {

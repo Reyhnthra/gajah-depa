@@ -169,7 +169,7 @@
             
             <!-- Left 2 Cols: Settings Form -->
             <div class="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100">
-                <form action="{{ route('admin.pengaturan.update') }}" method="POST" class="space-y-6" onsubmit="return confirm('Apakah Anda yakin ingin menyimpan perubahan data profil Anda?')">
+                <form action="{{ route('admin.pengaturan.update') }}" method="POST" class="space-y-6" data-confirm="Apakah Anda yakin ingin menyimpan perubahan data profil Anda?">
                     @csrf
 
                     <!-- Section 1: Profil Admin -->
