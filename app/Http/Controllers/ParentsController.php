@@ -123,7 +123,7 @@ class ParentsController extends Controller
                     'alamat'        => 'Sumedang',
                     'keahlian'      => 'Pelatih Renang',
                     'foto'          => 'images/fajar.png',
-                    'cabang_ids'    => [1, 2],
+                    'cabang_ids'    => [1, 2, 3],
                 ],
                 [
                     'nama'          => 'Ranjellia Julian Pratiwi',

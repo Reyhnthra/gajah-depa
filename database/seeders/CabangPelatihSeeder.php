@@ -39,9 +39,10 @@ class CabangPelatihSeeder extends Seeder
             // 7. Resti Tisnasari, M.Pd (Sumedang)
             ['id_pelatih' => 7, 'id_cabang' => 1],
 
-            // 8. Fajar Adhi Nugraha, S.Pd (Sumedang dan Darmaraja)
+            // 8. Fajar Adhi Nugraha, S.Pd (Sumedang, Darmaraja, dan Cimanggung)
             ['id_pelatih' => 8, 'id_cabang' => 1],
             ['id_pelatih' => 8, 'id_cabang' => 2],
+            ['id_pelatih' => 8, 'id_cabang' => 3],
 
             // 9. Ranjellia Julian Pratiwi (Sumedang)
             ['id_pelatih' => 9, 'id_cabang' => 1],
