@@ -39,9 +39,8 @@ class CabangPelatihSeeder extends Seeder
             // 7. Resti Tisnasari, M.Pd (Sumedang)
             ['id_pelatih' => 7, 'id_cabang' => 1],
 
-            // 8. Fajar Adhi Nugraha, S.Pd (Sumedang, Darmaraja, dan Cimanggung)
+            // 8. Fajar Adhi Nugraha, S.Pd (Sumedang dan Cimanggung)
             ['id_pelatih' => 8, 'id_cabang' => 1],
-            ['id_pelatih' => 8, 'id_cabang' => 2],
             ['id_pelatih' => 8, 'id_cabang' => 3],
 
             // 9. Ranjellia Julian Pratiwi (Sumedang)
@@ -49,7 +48,18 @@ class CabangPelatihSeeder extends Seeder
 
             // 10. AHMAD SYUKUR, M.Pd (Sumedang)
             ['id_pelatih' => 10, 'id_cabang' => 1],
+
+            // 11. Rizki Sugiharti, S.Pd (Sumedang)
+            ['id_pelatih' => 11, 'id_cabang' => 1],
+
+            // 12. Ramlan Mubarok, S.Pd (Sumedang)
+            ['id_pelatih' => 12, 'id_cabang' => 1],
         ];
+
+        DB::table('cabang_pelatih')
+            ->where('id_pelatih', 8)
+            ->where('id_cabang', 2)
+            ->delete();
 
         foreach ($rows as $row) {
             DB::table('cabang_pelatih')->updateOrInsert($row, $row);
