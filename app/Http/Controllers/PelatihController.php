@@ -362,19 +362,6 @@ class PelatihController extends Controller
             ->get();
 
         $recentSiswa = collect($dbSiswa);
-        if ($recentSiswa->count() < 3) {
-            $defaultSiswa = [
-                (object)['nama' => 'Ahmad Rizki', 'tingkat_kelas' => 'Pemula A', 'status' => 'Aktif'],
-                (object)['nama' => 'Sari Dewi', 'tingkat_kelas' => 'Menengah A', 'status' => 'Aktif'],
-                (object)['nama' => 'Reza Kurniawan', 'tingkat_kelas' => 'Lanjutan A', 'status' => 'Aktif'],
-            ];
-            foreach ($defaultSiswa as $ds) {
-                if ($recentSiswa->count() >= 3) break;
-                if (!$recentSiswa->contains('nama', $ds->nama)) {
-                    $recentSiswa->push($ds);
-                }
-            }
-        }
 
         // 2. Data Ulasan Saya (Ringkasan 3 Ulasan)
         $dbUlasanSaya = DB::table('ulasan_pelatih')
@@ -392,32 +379,6 @@ class PelatihController extends Controller
             ->get();
 
         $recentUlasanSaya = collect($dbUlasanSaya);
-        if ($recentUlasanSaya->count() < 3) {
-            $defaultUlasanSaya = [
-                (object)[
-                    'nama_parent' => 'Hendra Rizki',
-                    'nama_siswa' => 'Ahmad Rizki',
-                    'bintang_rating' => 5,
-                    'komentar_rating' => 'Pelatih sangat sabar dan profesional. Anak saya sangat cepat berkembang.',
-                ],
-                (object)[
-                    'nama_parent' => 'Dewi Lestari',
-                    'nama_siswa' => 'Sari Dewi',
-                    'bintang_rating' => 4,
-                    'komentar_rating' => 'Metode pengajaran bagus, komunikasi dengan orang tua juga sangat responsif.',
-                ],
-                (object)[
-                    'nama_parent' => 'Agus Salim',
-                    'nama_siswa' => 'Siti Nurhaliza',
-                    'bintang_rating' => 5,
-                    'komentar_rating' => 'Profesional dan peduli. Anak kami sangat senang latihan bersama.',
-                ],
-            ];
-            foreach ($defaultUlasanSaya as $dus) {
-                if ($recentUlasanSaya->count() >= 3) break;
-                $recentUlasanSaya->push($dus);
-            }
-        }
 
         // 3. Data Ulasan Club (Ringkasan 3 Ulasan)
         $dbUlasanClub = DB::table('ulasan_club')
@@ -433,32 +394,6 @@ class PelatihController extends Controller
             ->get();
 
         $recentUlasanClub = collect($dbUlasanClub);
-        if ($recentUlasanClub->count() < 3) {
-            $defaultUlasanClub = [
-                (object)[
-                    'nama_parent' => 'Hendra Rizki',
-                    'kategori' => 'Fasilitas',
-                    'bintang_rating' => 5,
-                    'komentar_rating' => 'Fasilitas kolam sangat bersih dan terawat. Jadwal latihan juga sangat fleksibel.',
-                ],
-                (object)[
-                    'nama_parent' => 'Agus Salim',
-                    'kategori' => 'Manajemen',
-                    'bintang_rating' => 4,
-                    'komentar_rating' => 'Manajemen club cukup baik, komunikasi dengan orang tua cukup responsif.',
-                ],
-                (object)[
-                    'nama_parent' => 'Wati Pratama',
-                    'kategori' => 'Program',
-                    'bintang_rating' => 5,
-                    'komentar_rating' => 'Program latihan terstruktur dengan baik. Anak kami maju dengan pesat.',
-                ],
-            ];
-            foreach ($defaultUlasanClub as $duc) {
-                if ($recentUlasanClub->count() >= 3) break;
-                $recentUlasanClub->push($duc);
-            }
-        }
 
         $dbYearsAbsensi = DB::table('absensi_siswa')
             ->join('siswa', 'absensi_siswa.id_siswa', '=', 'siswa.id')

@@ -439,7 +439,7 @@
                     </div>
 
                     <div class="space-y-4">
-                        @foreach($recentSiswa as $siswa)
+                        @forelse($recentSiswa as $siswa)
                             @php
                                 $nama = $siswa->nama ?? 'Siswa';
                                 $parts = explode(' ', trim($nama));
@@ -470,7 +470,12 @@
                                     Aktif
                                 </span>
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="py-8 text-center text-slate-400">
+                                <i class="fa-solid fa-users-slash text-2xl mb-2 text-slate-300 block"></i>
+                                <p class="text-xs font-medium">Belum ada data siswa di cabang ini.</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -492,7 +497,7 @@
                     </div>
 
                     <div class="space-y-3">
-                        @foreach($recentUlasanSaya as $us)
+                        @forelse($recentUlasanSaya as $us)
                             <div
                                 class="rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 transition hover:bg-slate-50">
                                 <div class="flex items-center justify-between gap-2 mb-0.5">
@@ -516,7 +521,12 @@
                                     "{{ $us->komentar_rating ?? '-' }}"
                                 </p>
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="py-8 text-center text-slate-400">
+                                <i class="fa-regular fa-comment-dots text-2xl mb-2 text-slate-300 block"></i>
+                                <p class="text-xs font-medium">Belum ada ulasan untuk Anda.</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -538,7 +548,7 @@
                     </div>
 
                     <div class="space-y-3">
-                        @foreach($recentUlasanClub as $uc)
+                        @forelse($recentUlasanClub as $uc)
                             <div
                                 class="rounded-xl border border-slate-100 bg-slate-50/50 p-3.5 transition hover:bg-slate-50">
                                 <div class="flex items-center justify-between gap-2 mb-1">
@@ -565,7 +575,12 @@
                                     "{{ $uc->komentar_rating ?? '-' }}"
                                 </p>
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="py-8 text-center text-slate-400">
+                                <i class="fa-regular fa-flag text-2xl mb-2 text-slate-300 block"></i>
+                                <p class="text-xs font-medium">Belum ada ulasan untuk club di cabang ini.</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
