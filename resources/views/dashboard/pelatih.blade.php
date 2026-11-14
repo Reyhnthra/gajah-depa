@@ -44,7 +44,7 @@
             scrollbar-color: #94a3b8 #e2e8f0;
         }
     </style>
-    <title>Dashboard Pelatih - Gajah Depa Swimming Club</title>
+    <title>Dashboard Pelatih - Gajah Depa Akuatik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">

@@ -214,7 +214,7 @@ class AuthController extends Controller
             Auth::login($user);
         });
 
-        return redirect()->route('parents.dashboard')->with('sukses', 'Akun berhasil dibuat! Selamat datang di Gajah Depa Swimming.');
+        return redirect()->route('parents.dashboard')->with('sukses', 'Akun berhasil dibuat! Selamat datang di Gajah Depa Akuatik.');
     }
 
     // Menampilkan halaman login

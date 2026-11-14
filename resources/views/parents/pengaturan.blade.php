@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengaturan Akun - Gajah Depa Swimming Club</title>
+    <title>Pengaturan Akun - Gajah Depa Akuatik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -320,7 +320,7 @@
                         <span>Informasi Pendaftaran</span>
                     </div>
                     <p class="leading-relaxed text-amber-800">
-                        Jika terdapat perubahan data anak (seperti pindah kelas atau cabang), silakan hubungi tim administrasi Gajah Depa Swimming Club.
+                        Jika terdapat perubahan data anak (seperti pindah kelas atau cabang), silakan hubungi tim administrasi Gajah Depa Akuatik.
                     </p>
                 </div>
             </div>

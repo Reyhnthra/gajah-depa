@@ -9,7 +9,7 @@
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
     </style>
-    <title>Manajemen Siswa - Gajah Depa Swimming Club</title>
+    <title>Manajemen Siswa - Gajah Depa Akuatik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2580,7 +2580,7 @@
                 if (cleanPhone.startsWith('0')) {
                     cleanPhone = '62' + cleanPhone.slice(1);
                 }
-                const msg = encodeURIComponent(`Halo Bpk/Ibu ${data.nama_orang_tua}, kami dari Tim Administrasi Gajah Depa Swimming Club ingin mengonfirmasi pendaftaran ananda ${data.nama_siswa}.`);
+                const msg = encodeURIComponent(`Halo Bpk/Ibu ${data.nama_orang_tua}, kami dari Tim Administrasi Gajah Depa Akuatik ingin mengonfirmasi pendaftaran ananda ${data.nama_siswa}.`);
                 waBtn.href = `https://wa.me/${cleanPhone}?text=${msg}`;
                 waBtn.classList.remove('hidden');
             } else {

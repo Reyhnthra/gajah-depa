@@ -129,7 +129,7 @@
                     <tr>
                         <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 28px; text-align: center;">
                             <p style="margin: 0 0 4px; font-size: 12px; font-weight: 600; color: #64748b;">
-                                Gajah Depa Swimming Club - Panel Admin
+                                Gajah Depa Akuatik - Panel Admin
                             </p>
                             <p style="margin: 0; font-size: 11px; color: #94a3b8;">
                                 Email notifikasi otomatis sistem untuk Admin Cabang / Admin Pusat.
