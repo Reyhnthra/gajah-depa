@@ -1251,45 +1251,88 @@ class PelatihController extends Controller
         $updateUserData = [
             'nama'          => $request->nama,
             'email'         => $request->email,
-            'no_hp'         => $request->no_hp,
+            'no_hp'         => $request->filled('no_hp') ? $request->no_hp : null,
             'jenis_kelamin' => $request->jenis_kelamin ?? $user->jenis_kelamin ?? 'laki-laki',
             'updated_at'    => now(),
         ];
 
+        $newFotoPath = null;
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
-            $filename = 'pelatih_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $destPath = public_path('images/pelatih');
+            $filename = 'pelatih_' . time() . '_' . uniqid() . '.' . strtolower($file->getClientOriginalExtension());
+            $destPath = public_path('uploads/pelatih');
             if (!file_exists($destPath)) {
                 mkdir($destPath, 0755, true);
             }
             $file->move($destPath, $filename);
 
-            // Hapus foto lama jika ada
-            if ($user->foto && file_exists(public_path($user->foto))) {
-                @unlink(public_path($user->foto));
-            }
-
-            $updateUserData['foto'] = 'images/pelatih/' . $filename;
+            $newFotoPath = 'uploads/pelatih/' . $filename;
+            $updateUserData['foto'] = $newFotoPath;
         }
 
         if ($request->filled('password')) {
             $updateUserData['password'] = bcrypt($request->password);
         }
 
-        DB::table('users')->where('id', $user->id)->update($updateUserData);
+        $fotosToDelete = [];
 
-        // Update data di tabel pelatih jika ada
-        $pelatih = DB::table('pelatih')->where('id_user', $user->id)->first();
-        if ($pelatih) {
-            $updatePelatihData = [
-                'tempat_lahir' => $request->tempat_lahir,
-                'no_rek'       => $request->no_rek,
-            ];
-            if ($request->filled('tanggal_lahir')) {
-                $updatePelatihData['tanggal_lahir'] = $request->tanggal_lahir;
+        DB::transaction(function () use ($request, $user, $updateUserData, $newFotoPath, &$fotosToDelete) {
+            if ($newFotoPath && $user->foto) {
+                $fotosToDelete[] = $user->foto;
             }
-            DB::table('pelatih')->where('id', $pelatih->id)->update($updatePelatihData);
+
+            DB::table('users')->where('id', $user->id)->update($updateUserData);
+
+            // Update data global di tabel pelatih dan sinkronkan ke seluruh cabang_pelatih milik pelatih ini
+            $pelatih = DB::table('pelatih')->where('id_user', $user->id)->first();
+            if ($pelatih) {
+                $updatePelatihData = [
+                    'tempat_lahir' => $request->tempat_lahir,
+                    'no_rek'       => $request->no_rek,
+                ];
+                if ($request->filled('tanggal_lahir')) {
+                    $updatePelatihData['tanggal_lahir'] = $request->tanggal_lahir;
+                }
+                DB::table('pelatih')->where('id', $pelatih->id)->update($updatePelatihData);
+
+                $updateCabangPelatih = [
+                    'nama'         => $request->nama,
+                    'no_hp'        => $updateUserData['no_hp'],
+                    'tempat_lahir' => $request->tempat_lahir,
+                    'no_rek'       => $request->no_rek,
+                ];
+                if ($request->filled('tanggal_lahir')) {
+                    $updateCabangPelatih['tanggal_lahir'] = $request->tanggal_lahir;
+                }
+                if ($newFotoPath) {
+                    $oldBranchFotos = DB::table('cabang_pelatih')
+                        ->where('id_pelatih', $pelatih->id)
+                        ->whereNotNull('foto')
+                        ->pluck('foto')
+                        ->all();
+                    $fotosToDelete = array_merge($fotosToDelete, $oldBranchFotos);
+
+                    $updateCabangPelatih['foto'] = $newFotoPath;
+                    $updateCabangPelatih['hapus_foto'] = false;
+                }
+
+                DB::table('cabang_pelatih')
+                    ->where('id_pelatih', $pelatih->id)
+                    ->update($updateCabangPelatih);
+            }
+        });
+
+        // Hapus foto lama hanya jika berada di uploads/ atau images/pelatih/ dan tidak lagi dipakai
+        foreach (array_unique($fotosToDelete) as $oldFoto) {
+            $normalized = ltrim(str_replace('\\', '/', $oldFoto), '/');
+            if (!str_starts_with($normalized, 'uploads/') && !str_starts_with($normalized, 'images/pelatih/')) {
+                continue;
+            }
+            $masihDipakai = DB::table('users')->where('foto', $oldFoto)->exists()
+                || DB::table('cabang_pelatih')->where('foto', $oldFoto)->exists();
+            if (!$masihDipakai && file_exists(public_path($oldFoto))) {
+                @unlink(public_path($oldFoto));
+            }
         }
 
         return redirect()->route('pelatih.pengaturan')->with('success', 'Profil dan pengaturan pelatih berhasil diperbarui.');
