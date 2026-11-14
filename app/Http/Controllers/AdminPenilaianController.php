@@ -13,8 +13,6 @@ class AdminPenilaianController extends Controller
      */
     public function index(Request $request)
     {
-        ParentsController::syncDataPelatihExcel();
-
         $adminCabang    = Auth::user()->id_cabang ?? null;
         $activeTab      = $request->input('tab', 'pelatih'); // 'pelatih' atau 'club'
         $search         = $request->input('search');
@@ -42,13 +40,15 @@ class AdminPenilaianController extends Controller
 
         if ($adminCabang) {
             $listPelatihQuery->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
-                             ->where('cabang_pelatih.id_cabang', $adminCabang);
+                             ->where('cabang_pelatih.id_cabang', $adminCabang)
+                             ->select('pelatih.id', DB::raw('COALESCE(cabang_pelatih.nama, users.nama) as nama'))
+                             ->orderBy('nama', 'asc');
+        } else {
+            $listPelatihQuery->select('pelatih.id', 'users.nama')
+                             ->orderBy('users.nama', 'asc');
         }
 
-        $listPelatih = $listPelatihQuery
-            ->select('pelatih.id', 'users.nama')
-            ->orderBy('users.nama', 'asc')
-            ->get();
+        $listPelatih = $listPelatihQuery->get();
 
         // Master Cabang untuk dropdown filter tab club
         $listCabang = $adminCabang
@@ -160,8 +160,25 @@ class AdminPenilaianController extends Controller
                 ->join('pelatih', 'ulasan_pelatih.id_pelatih', '=', 'pelatih.id')
                 ->join('users as up', 'pelatih.id_user', '=', 'up.id')
                 ->leftJoin('parents', 'ulasan_pelatih.id_parents', '=', 'parents.id')
-                ->leftJoin('users as u_parent', 'parents.id_user', '=', 'u_parent.id')
-                ->select(
+                ->leftJoin('users as u_parent', 'parents.id_user', '=', 'u_parent.id');
+
+            if ($adminCabang) {
+                $query->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
+                      ->where('cabang_pelatih.id_cabang', $adminCabang)
+                      ->select(
+                          'ulasan_pelatih.id',
+                          'ulasan_pelatih.bintang_rating',
+                          'ulasan_pelatih.komentar_rating',
+                          'ulasan_pelatih.created_at',
+                          'pelatih.id as id_pelatih',
+                          DB::raw('COALESCE(cabang_pelatih.nama, up.nama) as nama_pelatih'),
+                          DB::raw('CASE WHEN cabang_pelatih.hapus_foto = 1 THEN NULL ELSE COALESCE(cabang_pelatih.foto, up.foto) END as foto_pelatih'),
+                          'u_parent.nama as nama_parent',
+                          'u_parent.no_hp as no_hp_parent',
+                          DB::raw('(SELECT GROUP_CONCAT(s.nama SEPARATOR ", ") FROM siswa s WHERE s.id_parents = parents.id) as nama_siswa')
+                      );
+            } else {
+                $query->select(
                     'ulasan_pelatih.id',
                     'ulasan_pelatih.bintang_rating',
                     'ulasan_pelatih.komentar_rating',
@@ -173,16 +190,16 @@ class AdminPenilaianController extends Controller
                     'u_parent.no_hp as no_hp_parent',
                     DB::raw('(SELECT GROUP_CONCAT(s.nama SEPARATOR ", ") FROM siswa s WHERE s.id_parents = parents.id) as nama_siswa')
                 );
-
-            if ($adminCabang) {
-                $query->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
-                      ->where('cabang_pelatih.id_cabang', $adminCabang);
             }
 
             if ($request->filled('search')) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('up.nama', 'like', "%{$search}%")
-                      ->orWhere('u_parent.nama', 'like', "%{$search}%")
+                $query->where(function ($q) use ($search, $adminCabang) {
+                    if ($adminCabang) {
+                        $q->whereRaw('COALESCE(cabang_pelatih.nama, up.nama) like ?', ["%{$search}%"]);
+                    } else {
+                        $q->where('up.nama', 'like', "%{$search}%");
+                    }
+                    $q->orWhere('u_parent.nama', 'like', "%{$search}%")
                       ->orWhere('ulasan_pelatih.komentar_rating', 'like', "%{$search}%")
                       ->orWhereExists(function ($sub) use ($search) {
                           $sub->select(DB::raw(1))

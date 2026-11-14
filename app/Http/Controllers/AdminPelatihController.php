@@ -6,19 +6,98 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use App\Models\User;
 
 class AdminPelatihController extends Controller
 {
+    /**
+     * Kolom select profil pelatih terisolasi per cabang.
+     */
+    private function selectPelatihCabangColumns(bool $withEmailAndFoto = true): array
+    {
+        $columns = [
+            'pelatih.id as id_pelatih',
+            DB::raw('COALESCE(cabang_pelatih.tempat_lahir, pelatih.tempat_lahir) as tempat_lahir'),
+            DB::raw('COALESCE(cabang_pelatih.tanggal_lahir, pelatih.tanggal_lahir) as tanggal_lahir'),
+            DB::raw('COALESCE(cabang_pelatih.no_rek, pelatih.no_rek) as no_rek'),
+            'users.id as id_user',
+            DB::raw('COALESCE(cabang_pelatih.nama, users.nama) as nama'),
+            DB::raw('COALESCE(cabang_pelatih.no_hp, users.no_hp) as no_hp'),
+            'users.email',
+            DB::raw('COALESCE(cabang_pelatih.status, users.status) as status'),
+        ];
+
+        if ($withEmailAndFoto) {
+            $columns[] = DB::raw('CASE WHEN cabang_pelatih.hapus_foto = 1 THEN NULL ELSE COALESCE(cabang_pelatih.foto, users.foto) END as foto');
+        }
+
+        return $columns;
+    }
+
+    /**
+     * Hapus file foto upload secara aman tanpa menyentuh aset bawaan di public/images/
+     * dan tanpa menghapus foto yang masih dipakai baris users atau cabang_pelatih lain.
+     */
+    private function hapusFotoAman(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        $normalized = ltrim(str_replace('\\', '/', $path), '/');
+        if (!str_starts_with($normalized, 'uploads/')) {
+            return;
+        }
+
+        $masihDipakaiUser = DB::table('users')->where('foto', $path)->exists();
+        $masihDipakaiCabang = DB::table('cabang_pelatih')->where('foto', $path)->exists();
+
+        if ($masihDipakaiUser || $masihDipakaiCabang) {
+            return;
+        }
+
+        if (file_exists(public_path($path))) {
+            @unlink(public_path($path));
+        }
+    }
+
+    /**
+     * Upload foto pelatih ke public/uploads/pelatih.
+     */
+    private function uploadFotoPelatih(Request $request): ?string
+    {
+        if (!$request->hasFile('foto')) {
+            return null;
+        }
+
+        $file = $request->file('foto');
+        $extension = strtolower($file->getClientOriginalExtension());
+        $filename = 'pelatih_' . time() . '_' . uniqid() . '.' . $extension;
+        $destPath = public_path('uploads/pelatih');
+        if (!file_exists($destPath)) {
+            mkdir($destPath, 0755, true);
+        }
+        $file->move($destPath, $filename);
+
+        return 'uploads/pelatih/' . $filename;
+    }
+
     // Menampilkan halaman Manajemen Pelatih
     public function index(Request $request)
     {
-        ParentsController::syncDataPelatihExcel();
+        $adminCabang = Auth::user()->id_cabang ?? null;
 
-        // 1. Ambil daftar pelatih beserta data user-nya
+        // 1. Ambil daftar pelatih beserta data user-nya (terisolasi per cabang jika admin cabang)
         $query_pelatih = DB::table('pelatih')
-            ->join('users', 'pelatih.id_user', '=', 'users.id')
-            ->select(
+            ->join('users', 'pelatih.id_user', '=', 'users.id');
+
+        if ($adminCabang) {
+            $query_pelatih->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
+                          ->where('cabang_pelatih.id_cabang', $adminCabang)
+                          ->select($this->selectPelatihCabangColumns(true));
+        } else {
+            $query_pelatih->select(
                 'pelatih.id as id_pelatih',
                 'pelatih.tempat_lahir',
                 'pelatih.tanggal_lahir',
@@ -30,25 +109,32 @@ class AdminPelatihController extends Controller
                 'users.foto',
                 'users.status'
             );
-
-        $adminCabang = Auth::user()->id_cabang ?? null;
-        if ($adminCabang) {
-            $query_pelatih->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
-                          ->where('cabang_pelatih.id_cabang', $adminCabang);
         }
 
         if ($request->filled('search_pelatih')) {
-            $query_pelatih->where(function ($q) use ($request) {
-                $q->where('users.nama', 'like', '%' . $request->search_pelatih . '%')
-                  ->orWhere('users.email', 'like', '%' . $request->search_pelatih . '%');
+            $searchPelatih = $request->search_pelatih;
+            $query_pelatih->where(function ($q) use ($searchPelatih, $adminCabang) {
+                if ($adminCabang) {
+                    $q->whereRaw('COALESCE(cabang_pelatih.nama, users.nama) like ?', ['%' . $searchPelatih . '%']);
+                } else {
+                    $q->where('users.nama', 'like', '%' . $searchPelatih . '%');
+                }
+                $q->orWhere('users.email', 'like', '%' . $searchPelatih . '%');
             });
         }
 
-        $data_pelatih = $query_pelatih->orderBy('users.nama', 'asc')->get();
+        $data_pelatih = $query_pelatih->orderBy('nama', 'asc')->get();
 
-        // 2. Absensi per pelatih (untuk modal detail) - semua data tanpa filter
-        $absensi_per_pelatih = DB::table('absensi_pelatih')
-            ->select('id', 'id_pelatih', 'tanggal_kehadiran', 'status_kehadiran', 'keterangan')
+        // 2. Absensi per pelatih (untuk modal detail) - difilter per cabang agar tidak tercampur antar cabang
+        $absensiPerPelatihQuery = DB::table('absensi_pelatih')
+            ->select('id', 'id_pelatih', 'tanggal_kehadiran', 'status_kehadiran', 'keterangan');
+        if ($adminCabang) {
+            $absensiPerPelatihQuery->where(function ($q) use ($adminCabang) {
+                $q->where('id_cabang', $adminCabang)
+                  ->orWhereNull('id_cabang');
+            });
+        }
+        $absensi_per_pelatih = $absensiPerPelatihQuery
             ->orderBy('tanggal_kehadiran', 'desc')
             ->get()
             ->groupBy('id_pelatih');
@@ -56,18 +142,30 @@ class AdminPelatihController extends Controller
         // 3. Query data absensi pelatih dengan filter (untuk tabel bawah)
         $query_absensi = DB::table('absensi_pelatih')
             ->join('pelatih', 'absensi_pelatih.id_pelatih', '=', 'pelatih.id')
-            ->join('users', 'pelatih.id_user', '=', 'users.id')
-            ->select(
+            ->join('users', 'pelatih.id_user', '=', 'users.id');
+
+        if ($adminCabang) {
+            $query_absensi->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
+                          ->where('cabang_pelatih.id_cabang', $adminCabang)
+                          ->where(function ($q) use ($adminCabang) {
+                              $q->where('absensi_pelatih.id_cabang', $adminCabang)
+                                ->orWhereNull('absensi_pelatih.id_cabang');
+                          })
+                          ->select(
+                              'absensi_pelatih.id',
+                              'absensi_pelatih.tanggal_kehadiran',
+                              'absensi_pelatih.status_kehadiran',
+                              'absensi_pelatih.keterangan',
+                              DB::raw('COALESCE(cabang_pelatih.nama, users.nama) as nama_pelatih')
+                          );
+        } else {
+            $query_absensi->select(
                 'absensi_pelatih.id',
                 'absensi_pelatih.tanggal_kehadiran',
                 'absensi_pelatih.status_kehadiran',
                 'absensi_pelatih.keterangan',
                 'users.nama as nama_pelatih'
             );
-
-        if ($adminCabang) {
-            $query_absensi->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
-                          ->where('cabang_pelatih.id_cabang', $adminCabang);
         }
 
         // Filter Periode Absensi (Default: bulan dan tahun berjalan jika belum difilter)
@@ -76,7 +174,11 @@ class AdminPelatihController extends Controller
 
         // Filter Nama
         if ($request->filled('search_nama')) {
-            $query_absensi->where('users.nama', 'like', '%' . $request->search_nama . '%');
+            if ($adminCabang) {
+                $query_absensi->whereRaw('COALESCE(cabang_pelatih.nama, users.nama) like ?', ['%' . $request->search_nama . '%']);
+            } else {
+                $query_absensi->where('users.nama', 'like', '%' . $request->search_nama . '%');
+            }
         }
 
         // Filter Bulan
@@ -110,9 +212,12 @@ class AdminPelatihController extends Controller
         $allPelatihQuery = DB::table('pelatih')->join('users', 'pelatih.id_user', '=', 'users.id');
         if ($adminCabang) {
             $allPelatihQuery->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
-                            ->where('cabang_pelatih.id_cabang', $adminCabang);
+                            ->where('cabang_pelatih.id_cabang', $adminCabang)
+                            ->select(DB::raw('COALESCE(cabang_pelatih.status, users.status) as status'));
+        } else {
+            $allPelatihQuery->select('users.status');
         }
-        $all_pelatih   = $allPelatihQuery->select('users.status')->get();
+        $all_pelatih   = $allPelatihQuery->get();
         $total_pelatih = $all_pelatih->count();
         $pelatih_aktif = $all_pelatih->where('status', 'aktif')->count();
         $pelatih_nonaktif = $all_pelatih->where('status', 'nonaktif')->count();
@@ -123,7 +228,11 @@ class AdminPelatihController extends Controller
             ->whereNotNull('tanggal_kehadiran');
         if ($adminCabang) {
             $dbYearsAbsensiQuery->join('cabang_pelatih', 'absensi_pelatih.id_pelatih', '=', 'cabang_pelatih.id_pelatih')
-                ->where('cabang_pelatih.id_cabang', $adminCabang);
+                ->where('cabang_pelatih.id_cabang', $adminCabang)
+                ->where(function ($q) use ($adminCabang) {
+                    $q->where('absensi_pelatih.id_cabang', $adminCabang)
+                      ->orWhereNull('absensi_pelatih.id_cabang');
+                });
         }
         $dbYearsAbsensi = $dbYearsAbsensiQuery->pluck('yr')->map(fn($y) => (int)$y)->toArray();
         $listTahun = array_values(array_unique(array_merge([(int)date('Y')], $dbYearsAbsensi)));
@@ -135,9 +244,16 @@ class AdminPelatihController extends Controller
     // Export 1: Data Master Pelatih ke file CSV (ID Pelatih, Nama, Email, No HP, TTL, No Rekening, Keahlian, Alamat, Status, Total Hadir/Izin/Sakit)
     public function export(Request $request)
     {
+        $adminCabang = Auth::user()->id_cabang ?? null;
         $query = DB::table('pelatih')
-            ->join('users', 'pelatih.id_user', '=', 'users.id')
-            ->select(
+            ->join('users', 'pelatih.id_user', '=', 'users.id');
+
+        if ($adminCabang) {
+            $query->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
+                  ->where('cabang_pelatih.id_cabang', $adminCabang)
+                  ->select($this->selectPelatihCabangColumns(false));
+        } else {
+            $query->select(
                 'pelatih.id as id_pelatih',
                 'pelatih.tempat_lahir',
                 'pelatih.tanggal_lahir',
@@ -148,26 +264,31 @@ class AdminPelatihController extends Controller
                 'users.email',
                 'users.status'
             );
-
-        $adminCabang = Auth::user()->id_cabang ?? null;
-        if ($adminCabang) {
-            $query->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
-                  ->where('cabang_pelatih.id_cabang', $adminCabang);
         }
 
         if ($request->filled('search_pelatih')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('users.nama', 'like', '%' . $request->search_pelatih . '%')
-                  ->orWhere('users.email', 'like', '%' . $request->search_pelatih . '%');
+            $searchPelatih = $request->search_pelatih;
+            $query->where(function ($q) use ($searchPelatih, $adminCabang) {
+                if ($adminCabang) {
+                    $q->whereRaw('COALESCE(cabang_pelatih.nama, users.nama) like ?', ['%' . $searchPelatih . '%']);
+                } else {
+                    $q->where('users.nama', 'like', '%' . $searchPelatih . '%');
+                }
+                $q->orWhere('users.email', 'like', '%' . $searchPelatih . '%');
             });
         }
 
-        $pelatih = $query->orderBy('users.nama', 'asc')->get();
+        $pelatih = $query->orderBy('nama', 'asc')->get();
 
-        $absensi = DB::table('absensi_pelatih')
-            ->select('id_pelatih', 'status_kehadiran')
-            ->get()
-            ->groupBy('id_pelatih');
+        $absensiQuery = DB::table('absensi_pelatih')
+            ->select('id_pelatih', 'status_kehadiran');
+        if ($adminCabang) {
+            $absensiQuery->where(function ($q) use ($adminCabang) {
+                $q->where('id_cabang', $adminCabang)
+                  ->orWhereNull('id_cabang');
+            });
+        }
+        $absensi = $absensiQuery->get()->groupBy('id_pelatih');
 
         $filename = 'data_pelatih_gajah_depa_' . date('Ymd_His') . '.csv';
 
@@ -245,21 +366,33 @@ class AdminPelatihController extends Controller
 
         // Pilihan 1: Log Kehadiran Per Sesi Pelatih (No, Tanggal, Nama, Status, Keterangan)
         if ($format === 'sesi') {
+            $adminCabang = Auth::user()->id_cabang ?? null;
             $query_absensi = DB::table('absensi_pelatih')
                 ->join('pelatih', 'absensi_pelatih.id_pelatih', '=', 'pelatih.id')
-                ->join('users', 'pelatih.id_user', '=', 'users.id')
-                ->select(
+                ->join('users', 'pelatih.id_user', '=', 'users.id');
+
+            if ($adminCabang) {
+                $query_absensi->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
+                              ->where('cabang_pelatih.id_cabang', $adminCabang)
+                              ->where(function ($q) use ($adminCabang) {
+                                  $q->where('absensi_pelatih.id_cabang', $adminCabang)
+                                    ->orWhereNull('absensi_pelatih.id_cabang');
+                              })
+                              ->select(
+                                  'absensi_pelatih.id',
+                                  'absensi_pelatih.tanggal_kehadiran',
+                                  'absensi_pelatih.status_kehadiran',
+                                  'absensi_pelatih.keterangan',
+                                  DB::raw('COALESCE(cabang_pelatih.nama, users.nama) as nama_pelatih')
+                              );
+            } else {
+                $query_absensi->select(
                     'absensi_pelatih.id',
                     'absensi_pelatih.tanggal_kehadiran',
                     'absensi_pelatih.status_kehadiran',
                     'absensi_pelatih.keterangan',
                     'users.nama as nama_pelatih'
                 );
-
-            $adminCabang = Auth::user()->id_cabang ?? null;
-            if ($adminCabang) {
-                $query_absensi->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
-                              ->where('cabang_pelatih.id_cabang', $adminCabang);
             }
 
             if (!empty($startDate)) {
@@ -269,14 +402,18 @@ class AdminPelatihController extends Controller
                 $query_absensi->whereDate('absensi_pelatih.tanggal_kehadiran', '<=', $endDate);
             }
             if ($request->filled('search_nama')) {
-                $query_absensi->where('users.nama', 'like', '%' . $request->search_nama . '%');
+                if ($adminCabang) {
+                    $query_absensi->whereRaw('COALESCE(cabang_pelatih.nama, users.nama) like ?', ['%' . $request->search_nama . '%']);
+                } else {
+                    $query_absensi->where('users.nama', 'like', '%' . $request->search_nama . '%');
+                }
             }
             if ($request->filled('filter_status') && $request->filter_status !== 'semua') {
                 $query_absensi->where('absensi_pelatih.status_kehadiran', $request->filter_status);
             }
 
             $absensi = $query_absensi->orderBy('absensi_pelatih.tanggal_kehadiran', 'desc')
-                                     ->orderBy('users.nama', 'asc')
+                                     ->orderBy('nama_pelatih', 'asc')
                                      ->get();
 
             $filename = 'log_absensi_pelatih_' . $labelRentang . '_' . date('His') . '.csv';
@@ -327,26 +464,41 @@ class AdminPelatihController extends Controller
         }
 
         // Pilihan 2: Rekap Per Pelatih (No, Nama Pelatih, Total Hadir, Total Izin, Total Sakit)
+        $adminCabang = Auth::user()->id_cabang ?? null;
         $query = DB::table('pelatih')
-            ->join('users', 'pelatih.id_user', '=', 'users.id')
-            ->select(
+            ->join('users', 'pelatih.id_user', '=', 'users.id');
+
+        if ($adminCabang) {
+            $query->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
+                  ->where('cabang_pelatih.id_cabang', $adminCabang)
+                  ->select(
+                      'pelatih.id as id_pelatih',
+                      DB::raw('COALESCE(cabang_pelatih.nama, users.nama) as nama_pelatih')
+                  );
+        } else {
+            $query->select(
                 'pelatih.id as id_pelatih',
                 'users.nama as nama_pelatih'
             );
-
-        $adminCabang = Auth::user()->id_cabang ?? null;
-        if ($adminCabang) {
-            $query->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
-                  ->where('cabang_pelatih.id_cabang', $adminCabang);
         }
 
         if ($request->filled('search_nama')) {
-            $query->where('users.nama', 'like', '%' . $request->search_nama . '%');
+            if ($adminCabang) {
+                $query->whereRaw('COALESCE(cabang_pelatih.nama, users.nama) like ?', ['%' . $request->search_nama . '%']);
+            } else {
+                $query->where('users.nama', 'like', '%' . $request->search_nama . '%');
+            }
         }
 
-        $pelatih = $query->orderBy('users.nama', 'asc')->get();
+        $pelatih = $query->orderBy('nama_pelatih', 'asc')->get();
 
         $queryAbsensi = DB::table('absensi_pelatih')->select('id_pelatih', 'status_kehadiran');
+        if ($adminCabang) {
+            $queryAbsensi->where(function ($q) use ($adminCabang) {
+                $q->where('id_cabang', $adminCabang)
+                  ->orWhereNull('id_cabang');
+            });
+        }
         if (!empty($startDate)) {
             $queryAbsensi->whereDate('tanggal_kehadiran', '>=', $startDate);
         }
@@ -407,7 +559,7 @@ class AdminPelatihController extends Controller
             'nama'          => 'required|string|max:255',
             'tempat_lahir'  => 'required|string|max:255',
             'tanggal_lahir' => 'required|date',
-            'email'         => 'required|email|unique:users,email',
+            'email'         => 'required|email',
             'no_hp'         => 'nullable|string|max:30',
             'no_rek'        => 'required|string|max:50',
             'foto'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
@@ -416,26 +568,71 @@ class AdminPelatihController extends Controller
             'tempat_lahir.required'  => 'Tempat lahir wajib diisi.',
             'tanggal_lahir.required' => 'Tanggal lahir wajib diisi.',
             'email.required'         => 'Email wajib diisi.',
-            'email.unique'           => 'Email ini sudah terdaftar di sistem.',
             'no_rek.required'        => 'Nomor rekening wajib diisi.',
             'foto.image'             => 'File foto harus berupa gambar.',
             'foto.mimes'             => 'Format foto harus jpeg, png, jpg, atau webp.',
             'foto.max'               => 'Ukuran foto maksimal 2MB.',
         ]);
 
-        DB::transaction(function () use ($request) {
-            $fotoPath = null;
-            if ($request->hasFile('foto')) {
-                $file = $request->file('foto');
-                $extension = strtolower($file->getClientOriginalExtension());
-                $filename = 'pelatih_' . time() . '_' . uniqid() . '.' . $extension;
-                $destPath = public_path('uploads/pelatih');
-                if (!file_exists($destPath)) {
-                    mkdir($destPath, 0755, true);
-                }
-                $file->move($destPath, $filename);
-                $fotoPath = 'uploads/pelatih/' . $filename;
+        $adminCabang = Auth::user()->id_cabang ?? null;
+        $existingUser = DB::table('users')
+            ->whereRaw('LOWER(email) = ?', [strtolower(trim($request->email))])
+            ->first();
+
+        if ($existingUser) {
+            if ($existingUser->role !== 'pelatih' || !$adminCabang) {
+                return redirect()->back()
+                    ->withErrors(['email' => 'Email ini sudah terdaftar di sistem.'])
+                    ->withInput();
             }
+
+            $existingPelatih = DB::table('pelatih')->where('id_user', $existingUser->id)->first();
+            if ($existingPelatih) {
+                $alreadyInBranch = DB::table('cabang_pelatih')
+                    ->where('id_pelatih', $existingPelatih->id)
+                    ->where('id_cabang', $adminCabang)
+                    ->exists();
+
+                if ($alreadyInBranch) {
+                    return redirect()->back()
+                        ->withErrors(['email' => 'Pelatih dengan email ini sudah terdaftar di cabang ini.'])
+                        ->withInput();
+                }
+            }
+
+            DB::transaction(function () use ($request, $existingUser, $existingPelatih, $adminCabang) {
+                $fotoPath = $this->uploadFotoPelatih($request) ?? $existingUser->foto;
+
+                if ($existingPelatih) {
+                    $pelatihId = $existingPelatih->id;
+                } else {
+                    $pelatihId = DB::table('pelatih')->insertGetId([
+                        'id_user'       => $existingUser->id,
+                        'tempat_lahir'  => $request->tempat_lahir,
+                        'tanggal_lahir' => $request->tanggal_lahir,
+                        'no_rek'        => $request->no_rek,
+                    ]);
+                }
+
+                DB::table('cabang_pelatih')->insert([
+                    'id_pelatih'    => $pelatihId,
+                    'id_cabang'     => $adminCabang,
+                    'nama'          => $request->nama,
+                    'no_hp'         => $request->filled('no_hp') ? $request->no_hp : null,
+                    'tempat_lahir'  => $request->tempat_lahir,
+                    'tanggal_lahir' => $request->tanggal_lahir,
+                    'no_rek'        => $request->no_rek,
+                    'foto'          => $fotoPath,
+                    'hapus_foto'    => false,
+                    'status'        => 'aktif',
+                ]);
+            });
+
+            return redirect()->back()->with('sukses', 'Pelatih berhasil ditambahkan ke cabang ini!');
+        }
+
+        DB::transaction(function () use ($request, $adminCabang) {
+            $fotoPath = $this->uploadFotoPelatih($request);
 
             // 1. Buat User baru dengan role pelatih (password kosong, aktivasi mandiri di halaman Register)
             $user = User::create([
@@ -448,7 +645,7 @@ class AdminPelatihController extends Controller
                 'role'          => 'pelatih',
                 'foto'          => $fotoPath,
                 'status'        => 'aktif',
-                'id_cabang'     => Auth::user()->id_cabang ?? null,
+                'id_cabang'     => $adminCabang,
             ]);
 
             // 2. Buat profil pelatih
@@ -459,11 +656,18 @@ class AdminPelatihController extends Controller
                 'no_rek'        => $request->no_rek,
             ]);
 
-            $adminCabang = Auth::user()->id_cabang ?? null;
             if ($adminCabang) {
                 DB::table('cabang_pelatih')->insert([
-                    'id_pelatih' => $pelatihId,
-                    'id_cabang'  => $adminCabang,
+                    'id_pelatih'    => $pelatihId,
+                    'id_cabang'     => $adminCabang,
+                    'nama'          => $request->nama,
+                    'no_hp'         => $request->filled('no_hp') ? $request->no_hp : null,
+                    'tempat_lahir'  => $request->tempat_lahir,
+                    'tanggal_lahir' => $request->tanggal_lahir,
+                    'no_rek'        => $request->no_rek,
+                    'foto'          => $fotoPath,
+                    'hapus_foto'    => false,
+                    'status'        => 'aktif',
                 ]);
             }
         });
@@ -482,26 +686,41 @@ class AdminPelatihController extends Controller
         ]);
 
         $tanggal = $request->tanggal_kehadiran;
+        $adminCabang = Auth::user()->id_cabang ?? null;
         $savedCount = 0;
 
         foreach ($request->absensi as $id_pelatih => $item) {
-            // Pelatih dengan status nonaktif (off) tidak bisa diabsen
-            $pelatih = DB::table('pelatih')
+            // Pelatih dengan status nonaktif (off) pada cabang ini tidak bisa diabsen
+            $pelatihQuery = DB::table('pelatih')
                 ->join('users', 'pelatih.id_user', '=', 'users.id')
-                ->where('pelatih.id', $id_pelatih)
-                ->select('users.status')
-                ->first();
+                ->where('pelatih.id', $id_pelatih);
+
+            if ($adminCabang) {
+                $pelatihQuery->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
+                             ->where('cabang_pelatih.id_cabang', $adminCabang)
+                             ->select(DB::raw('COALESCE(cabang_pelatih.status, users.status) as status'));
+            } else {
+                $pelatihQuery->select('users.status');
+            }
+
+            $pelatih = $pelatihQuery->first();
 
             if (!$pelatih || strtolower($pelatih->status) !== 'aktif') {
                 continue; // Lewati pelatih yang nonaktif
             }
 
+            $matchWhere = [
+                'id_pelatih'        => $id_pelatih,
+                'tanggal_kehadiran' => $tanggal,
+            ];
+            if ($adminCabang) {
+                $matchWhere['id_cabang'] = $adminCabang;
+            }
+
             DB::table('absensi_pelatih')->updateOrInsert(
+                $matchWhere,
                 [
-                    'id_pelatih'        => $id_pelatih,
-                    'tanggal_kehadiran' => $tanggal,
-                ],
-                [
+                    'id_cabang'        => $adminCabang,
                     'status_kehadiran' => $item['status'] ?? 'hadir',
                     'keterangan'       => $item['keterangan'] ?? '-',
                     'created_at'       => now(),
@@ -572,12 +791,23 @@ class AdminPelatihController extends Controller
         return redirect()->back()->with('sukses', $count . ' data absensi pelatih berhasil dihapus.');
     }
 
-    // Update Data Pelatih oleh Admin
+    // Update Data Pelatih oleh Admin (terisolasi per cabang jika Admin Cabang)
     public function update(Request $request, $id)
     {
         $pelatih = DB::table('pelatih')->where('id', $id)->first();
         if (!$pelatih) {
             return redirect()->back()->withErrors(['msg' => 'Data pelatih tidak ditemukan.']);
+        }
+
+        $adminCabang = Auth::user()->id_cabang ?? null;
+        if ($adminCabang) {
+            $terdaftarDiCabang = DB::table('cabang_pelatih')
+                ->where('id_pelatih', $id)
+                ->where('id_cabang', $adminCabang)
+                ->exists();
+            if (!$terdaftarDiCabang) {
+                return redirect()->back()->withErrors(['msg' => 'Data pelatih tidak terdaftar di cabang ini.']);
+            }
         }
 
         $request->validate([
@@ -602,7 +832,60 @@ class AdminPelatihController extends Controller
             'foto.max'               => 'Ukuran foto maksimal 2MB.',
         ]);
 
-        DB::transaction(function () use ($request, $id, $pelatih) {
+        $newFotoPath = $this->uploadFotoPelatih($request);
+        $fotosToDelete = [];
+
+        DB::transaction(function () use ($request, $id, $pelatih, $adminCabang, $newFotoPath, &$fotosToDelete) {
+            if ($adminCabang) {
+                $cabangPelatih = DB::table('cabang_pelatih')
+                    ->where('id_pelatih', $id)
+                    ->where('id_cabang', $adminCabang)
+                    ->first();
+
+                $branchUpdateData = [
+                    'nama'          => $request->nama,
+                    'no_hp'         => $request->filled('no_hp') ? $request->no_hp : null,
+                    'tempat_lahir'  => $request->tempat_lahir,
+                    'tanggal_lahir' => $request->tanggal_lahir,
+                    'no_rek'        => $request->no_rek,
+                    'status'        => $request->status,
+                ];
+
+                $oldBranchFoto = $cabangPelatih->foto ?? null;
+                if ($newFotoPath) {
+                    $branchUpdateData['foto'] = $newFotoPath;
+                    $branchUpdateData['hapus_foto'] = false;
+                    if ($oldBranchFoto) {
+                        $fotosToDelete[] = $oldBranchFoto;
+                    }
+                } elseif ($request->boolean('hapus_foto')) {
+                    $branchUpdateData['foto'] = null;
+                    $branchUpdateData['hapus_foto'] = true;
+                    if ($oldBranchFoto) {
+                        $fotosToDelete[] = $oldBranchFoto;
+                    }
+                }
+
+                DB::table('cabang_pelatih')->updateOrInsert(
+                    ['id_pelatih' => $id, 'id_cabang' => $adminCabang],
+                    $branchUpdateData
+                );
+
+                $hasOtherBranch = DB::table('cabang_pelatih')
+                    ->where('id_pelatih', $id)
+                    ->where('id_cabang', '!=', $adminCabang)
+                    ->exists();
+
+                if ($hasOtherBranch) {
+                    // Pelatih terdaftar di cabang lain: jangan ubah profil/foto/status global agar cabang lain tetap utuh
+                    DB::table('users')->where('id', $pelatih->id_user)->update([
+                        'email'      => $request->email,
+                        'updated_at' => now(),
+                    ]);
+                    return;
+                }
+            }
+
             $userUpdateData = [
                 'nama'       => $request->nama,
                 'email'      => $request->email,
@@ -611,31 +894,17 @@ class AdminPelatihController extends Controller
                 'updated_at' => now(),
             ];
 
-            // Jika ada upload foto baru
-            if ($request->hasFile('foto')) {
-                $file = $request->file('foto');
-                $extension = strtolower($file->getClientOriginalExtension());
-                $filename = 'pelatih_' . time() . '_' . uniqid() . '.' . $extension;
-                $destPath = public_path('uploads/pelatih');
-                if (!file_exists($destPath)) {
-                    mkdir($destPath, 0755, true);
+            $oldUserFoto = DB::table('users')->where('id', $pelatih->id_user)->value('foto');
+            if ($newFotoPath) {
+                $userUpdateData['foto'] = $newFotoPath;
+                if ($oldUserFoto) {
+                    $fotosToDelete[] = $oldUserFoto;
                 }
-                $file->move($destPath, $filename);
-
-                // Hapus foto lama jika ada
-                $oldFoto = DB::table('users')->where('id', $pelatih->id_user)->value('foto');
-                if ($oldFoto && file_exists(public_path($oldFoto))) {
-                    @unlink(public_path($oldFoto));
-                }
-
-                $userUpdateData['foto'] = 'uploads/pelatih/' . $filename;
             } elseif ($request->boolean('hapus_foto')) {
-                // Hapus foto lama jika diminta
-                $oldFoto = DB::table('users')->where('id', $pelatih->id_user)->value('foto');
-                if ($oldFoto && file_exists(public_path($oldFoto))) {
-                    @unlink(public_path($oldFoto));
-                }
                 $userUpdateData['foto'] = null;
+                if ($oldUserFoto) {
+                    $fotosToDelete[] = $oldUserFoto;
+                }
             }
 
             // Update tabel users
@@ -648,17 +917,21 @@ class AdminPelatihController extends Controller
                 'no_rek'        => $request->no_rek,
             ];
 
-            if (\Illuminate\Support\Facades\Schema::hasColumn('pelatih', 'updated_at')) {
+            if (Schema::hasColumn('pelatih', 'updated_at')) {
                 $pelatihUpdateData['updated_at'] = now();
             }
 
             DB::table('pelatih')->where('id', $id)->update($pelatihUpdateData);
         });
 
+        foreach (array_unique($fotosToDelete) as $oldFoto) {
+            $this->hapusFotoAman($oldFoto);
+        }
+
         return redirect()->route('admin.pelatih.index')->with('sukses', 'Data pelatih ' . $request->nama . ' berhasil diperbarui!');
     }
 
-    // Hapus Data Pelatih oleh Admin
+    // Hapus Data Pelatih oleh Admin (hanya dari cabang ini jika masih terdaftar di cabang lain)
     public function destroy(Request $request, $id)
     {
         $pelatih = DB::table('pelatih')->where('id', $id)->first();
@@ -667,31 +940,64 @@ class AdminPelatihController extends Controller
             return redirect()->back()->withErrors(['msg' => 'Data pelatih tidak ditemukan.']);
         }
 
+        $adminCabang = Auth::user()->id_cabang ?? null;
         $user = DB::table('users')->where('id', $pelatih->id_user)->first();
-        $namaPelatih = $user ? $user->nama : 'Pelatih';
+        $cabangPelatih = $adminCabang
+            ? DB::table('cabang_pelatih')->where('id_pelatih', $id)->where('id_cabang', $adminCabang)->first()
+            : null;
+        $namaPelatih = ($cabangPelatih->nama ?? null) ?: ($user ? $user->nama : 'Pelatih');
+        $fotosToDelete = [];
 
-        DB::transaction(function () use ($pelatih, $id, $user) {
-            // Hapus file foto jika ada
-            if ($user && $user->foto && file_exists(public_path($user->foto))) {
-                @unlink(public_path($user->foto));
+        DB::transaction(function () use ($pelatih, $id, $user, $adminCabang, $cabangPelatih, &$fotosToDelete) {
+            if ($adminCabang) {
+                if ($cabangPelatih && $cabangPelatih->foto) {
+                    $fotosToDelete[] = $cabangPelatih->foto;
+                }
+
+                // 1. Hapus data absensi pelatih khusus cabang ini
+                DB::table('absensi_pelatih')
+                    ->where('id_pelatih', $id)
+                    ->where('id_cabang', $adminCabang)
+                    ->delete();
+
+                // 2. Hapus relasi cabang ini saja
+                DB::table('cabang_pelatih')
+                    ->where('id_pelatih', $id)
+                    ->where('id_cabang', $adminCabang)
+                    ->delete();
+
+                $remainingBranches = DB::table('cabang_pelatih')
+                    ->where('id_pelatih', $id)
+                    ->count();
+
+                if ($remainingBranches > 0) {
+                    // Masih terdaftar di cabang lain: pastikan users.id_cabang mengarah ke cabang aktif yang tersisa
+                    $otherBranchId = DB::table('cabang_pelatih')->where('id_pelatih', $id)->value('id_cabang');
+                    if ($user && (int)$user->id_cabang === (int)$adminCabang && $otherBranchId) {
+                        DB::table('users')->where('id', $user->id)->update(['id_cabang' => $otherBranchId]);
+                    }
+                    return;
+                }
             }
 
-            // 1. Hapus data absensi pelatih
+            // Jika tidak ada lagi di cabang mana pun (atau admin pusat): hapus permanen akun & profil pelatih
+            if ($user && $user->foto) {
+                $fotosToDelete[] = $user->foto;
+            }
+            $cpFotos = DB::table('cabang_pelatih')->where('id_pelatih', $id)->whereNotNull('foto')->pluck('foto')->all();
+            $fotosToDelete = array_merge($fotosToDelete, $cpFotos);
+
             DB::table('absensi_pelatih')->where('id_pelatih', $id)->delete();
-
-            // 2. Hapus ulasan pelatih (jika ada)
             DB::table('ulasan_pelatih')->where('id_pelatih', $id)->delete();
-
-            // 3. Hapus relasi cabang pelatih (jika ada)
             DB::table('cabang_pelatih')->where('id_pelatih', $id)->delete();
-
-            // 4. Hapus profil pelatih
             DB::table('pelatih')->where('id', $id)->delete();
-
-            // 5. Hapus akun user
             DB::table('users')->where('id', $pelatih->id_user)->delete();
         });
 
-        return redirect()->back()->with('sukses', 'Data pelatih ' . $namaPelatih . ' berhasil dihapus dari sistem.');
+        foreach (array_unique($fotosToDelete) as $oldFoto) {
+            $this->hapusFotoAman($oldFoto);
+        }
+
+        return redirect()->back()->with('sukses', 'Data pelatih ' . $namaPelatih . ' berhasil dihapus dari cabang ini.');
     }
 }

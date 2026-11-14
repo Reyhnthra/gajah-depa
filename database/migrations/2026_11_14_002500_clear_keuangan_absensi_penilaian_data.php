@@ -43,3 +43,4 @@ return new class extends Migration
         // Data transaksi yang sudah dikosongkan tidak dapat dikembalikan otomatis.
     }
 };
+

@@ -14,9 +14,6 @@ class LandingPageController extends Controller
     // 🏢 1. MENAMPILKAN HALAMAN UTAMA (LANDING PAGE)
     public function index()
     {
-        // Sinkronisasi daftar pelatih resmi
-        ParentsController::syncDataPelatihExcel();
-
         // Ambil data master cabang beserta jadwalnya
         $data_cabang = Cabang::with('jadwals')->get();
         

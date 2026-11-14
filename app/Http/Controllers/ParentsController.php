@@ -16,6 +16,10 @@ class ParentsController extends Controller
     public static function syncDataPelatihExcel(): void
     {
         try {
+            if (DB::table('pelatih')->count() > 0) {
+                return;
+            }
+
             $pelatihExcel = [
                 [
                     'nama'          => 'Rahadian Sugihbandana, S.Pd',
@@ -255,8 +259,6 @@ class ParentsController extends Controller
      */
     private function getParentAndChildData()
     {
-        self::syncDataPelatihExcel();
-
         $user = Auth::user();
 
         // Get Parent record linked to logged in user
@@ -336,9 +338,12 @@ class ParentsController extends Controller
         $idCabangSiswa = $siswa->id_cabang ?? 1;
         $pelatihCabangList = DB::table('pelatih')
             ->join('users', 'pelatih.id_user', '=', 'users.id')
-            ->leftJoin('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
+            ->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
             ->where('cabang_pelatih.id_cabang', $idCabangSiswa)
-            ->select('pelatih.id', 'users.nama as nama_pelatih')
+            ->select(
+                'pelatih.id',
+                DB::raw('COALESCE(cabang_pelatih.nama, users.nama) as nama_pelatih')
+            )
             ->distinct()
             ->get();
 
@@ -1087,17 +1092,22 @@ class ParentsController extends Controller
 
         // Fetch list of coaches for dropdown selection - Hanya pelatih yang terdaftar di cabang siswa ini
         $coachesQuery = DB::table('pelatih')
-            ->join('users', 'pelatih.id_user', '=', 'users.id')
-            ->select('pelatih.id', 'users.nama', 'users.foto')
-            ->orderBy('pelatih.id', 'asc');
+            ->join('users', 'pelatih.id_user', '=', 'users.id');
 
         if ($idCabangSiswa) {
             $coachesQuery->join('cabang_pelatih', 'pelatih.id', '=', 'cabang_pelatih.id_pelatih')
                          ->where('cabang_pelatih.id_cabang', $idCabangSiswa)
+                         ->select(
+                             'pelatih.id',
+                             DB::raw('COALESCE(cabang_pelatih.nama, users.nama) as nama'),
+                             DB::raw('CASE WHEN cabang_pelatih.hapus_foto = 1 THEN NULL ELSE COALESCE(cabang_pelatih.foto, users.foto) END as foto')
+                         )
                          ->distinct();
+        } else {
+            $coachesQuery->select('pelatih.id', 'users.nama', 'users.foto');
         }
 
-        $coaches = $coachesQuery->get();
+        $coaches = $coachesQuery->orderBy('pelatih.id', 'asc')->get();
 
         // Fetch cabang info
         $cabang = DB::table('cabang')->where('id', $siswa->id_cabang ?? 1)->first();
