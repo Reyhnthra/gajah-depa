@@ -41,11 +41,11 @@
     <header id="mainHeader"
         style="position: fixed !important; top: 0px !important; left: 0px !important; right: 0px !important; width: 100% !important; z-index: 99999 !important; background-color: rgba(255, 255, 255, 0.98) !important; backdrop-filter: blur(10px) !important; -webkit-backdrop-filter: blur(10px) !important; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08) !important; border-bottom: 1px solid #f1f5f9 !important; margin: 0 !important; transform: none !important;"
         class="sticky-nav fixed top-0 left-0 right-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100">
-        <nav class="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8">
-            <div class="flex items-center gap-x-2">
+        <nav class="mx-auto flex max-w-7xl items-center justify-between px-3 py-2.5 sm:p-4 lg:px-8">
+            <div class="flex items-center gap-x-2 min-w-0">
                 <img src="{{ asset('images/logo.jpg') }}" alt="Logo Gajah Depa Akuatik"
-                    class="h-10 w-10 rounded-full object-cover shadow-sm">
-                <span class="text-xl font-bold tracking-tight text-[#008cc9]">Gajah Depa Akuatik</span>
+                    class="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover shadow-sm shrink-0">
+                <span class="text-base sm:text-xl font-bold tracking-tight text-[#008cc9] truncate">Gajah Depa Akuatik</span>
             </div>
             <div class="hidden md:flex md:gap-x-8 lg:gap-x-10">
                 <a href="#keunggulan"
@@ -56,18 +56,29 @@
                 <a href="#program" class="text-sm font-medium text-gray-600 hover:text-[#008cc9] transition">Program</a>
                 <a href="#daftar" class="text-sm font-medium text-gray-600 hover:text-[#008cc9] transition">Daftar</a>
             </div>
-            <div class="flex items-center gap-x-3">
+            <div class="flex items-center gap-x-2 sm:gap-x-3 shrink-0">
                 <a href="{{ route('login') }}"
-                    class="rounded-lg px-4 py-2 text-sm font-semibold text-[#008cc9] border border-[#008cc9] hover:bg-cyan-50 transition">Masuk</a>
+                    class="rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-[#008cc9] border border-[#008cc9] hover:bg-cyan-50 transition whitespace-nowrap">Masuk</a>
                 <a href="{{ route('register') }}"
-                    class="rounded-lg bg-[#008cc9] px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-600 transition">Daftar
+                    class="rounded-lg bg-[#008cc9] px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white hover:bg-cyan-600 transition whitespace-nowrap">Daftar
                     Akun</a>
             </div>
         </nav>
+        <!-- Mobile Navigation Links -->
+        <div class="md:hidden border-t border-slate-100 px-3 py-2 overflow-x-auto">
+            <div class="flex items-center justify-between sm:justify-center gap-x-4 min-w-max mx-auto">
+                <a href="#keunggulan" class="text-xs font-medium text-gray-600 hover:text-[#008cc9] transition">Keunggulan</a>
+                <a href="#galeri" class="text-xs font-medium text-gray-600 hover:text-[#008cc9] transition">Galeri</a>
+                <a href="#pelatih" class="text-xs font-medium text-gray-600 hover:text-[#008cc9] transition">Pelatih</a>
+                <a href="#cabang" class="text-xs font-medium text-gray-600 hover:text-[#008cc9] transition">Cabang</a>
+                <a href="#program" class="text-xs font-medium text-gray-600 hover:text-[#008cc9] transition">Program</a>
+                <a href="#daftar" class="text-xs font-medium text-gray-600 hover:text-[#008cc9] transition">Daftar</a>
+            </div>
+        </div>
     </header>
 
     <section
-        class="relative min-h-[92vh] flex flex-col justify-center items-center text-white px-6 pt-28 pb-36 sm:pt-32 sm:pb-44 overflow-hidden"
+        class="relative min-h-[92vh] flex flex-col justify-center items-center text-white px-6 pt-32 pb-36 sm:pt-32 sm:pb-44 overflow-hidden"
         style="background: linear-gradient(135deg, rgba(0, 165, 236, 0.92) 0%, rgba(0, 110, 160, 0.95) 100%), url('https://images.unsplash.com/photo-1576610616656-d3aa5d1f4534?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;">
 
         <!-- Subtle Water Light Texture Overlay -->

@@ -99,30 +99,152 @@
     function closeWebConfirmModal() {
         const m = document.getElementById('webConfirmModal');
         if (m) m.classList.add('hidden');
+        const submitBtn = document.getElementById('webConfirmSubmitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Ya, Lanjutkan';
+        }
         _pendingConfirmForm = null;
         _pendingConfirmSubmitter = null;
+    }
+
+    function compressImageInput(input) {
+        if (!input || !input.files || !input.files[0]) return;
+        const fieldName = (input.getAttribute('name') || '').toLowerCase();
+        if (!['foto', 'foto_anak', 'foto_siswa'].includes(fieldName)) return;
+
+        const file = input.files[0];
+        if (file.__gdCompressed) return;
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+        if (!allowedTypes.includes((file.type || '').toLowerCase())) return;
+
+        input.__compressPromise = new Promise(function(resolve) {
+            const objectUrl = URL.createObjectURL(file);
+            const img = new Image();
+
+            img.onload = function() {
+                URL.revokeObjectURL(objectUrl);
+                try {
+                    const maxDim = 600;
+                    let width = img.naturalWidth || img.width;
+                    let height = img.naturalHeight || img.height;
+
+                    if (width > maxDim || height > maxDim) {
+                        const ratio = Math.min(maxDim / width, maxDim / height);
+                        width = Math.max(1, Math.round(width * ratio));
+                        height = Math.max(1, Math.round(height * ratio));
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        resolve();
+                        return;
+                    }
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, width, height);
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob(function(blob) {
+                        if (blob && (blob.size < file.size || file.size > 150 * 1024)) {
+                            const baseName = (file.name || 'foto').replace(/\.[^.]+$/, '') + '.jpg';
+                            const compressedFile = new File([blob], baseName, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            });
+                            compressedFile.__gdCompressed = true;
+                            const dt = new DataTransfer();
+                            dt.items.add(compressedFile);
+                            input.files = dt.files;
+                        }
+                        resolve();
+                    }, 'image/jpeg', 0.82);
+                } catch (err) {
+                    resolve();
+                }
+            };
+
+            img.onerror = function() {
+                URL.revokeObjectURL(objectUrl);
+                resolve();
+            };
+
+            img.src = objectUrl;
+        }).finally(function() {
+            input.__compressPromise = null;
+        });
+    }
+
+    function setFormSubmittingState(form, submitter) {
+        if (!form || (typeof form.checkValidity === 'function' && !form.checkValidity())) return;
+        const btn = (submitter && form.contains(submitter))
+            ? submitter
+            : form.querySelector('button[type="submit"], input[type="submit"]');
+        if (!btn) return;
+
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-wait');
+        if (btn.tagName === 'INPUT') {
+            btn.value = 'Menyimpan...';
+        } else {
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-1.5"></i><span>Menyimpan...</span>';
+        }
     }
 
     function proceedWebConfirmModal() {
         const form = _pendingConfirmForm;
         const submitter = _pendingConfirmSubmitter;
-        closeWebConfirmModal();
-        if (!form) return;
-
-        form.dataset.webConfirmed = '1';
-        if (typeof form.requestSubmit === 'function') {
-            if (submitter && form.contains(submitter) && !submitter.disabled) {
-                form.requestSubmit(submitter);
-            } else {
-                form.requestSubmit();
-            }
-        } else {
-            HTMLFormElement.prototype.submit.call(form);
+        if (!form) {
+            closeWebConfirmModal();
+            return;
         }
+
+        const pendingPromises = [];
+        form.querySelectorAll('input[type="file"]').forEach(function(input) {
+            if (input.__compressPromise) {
+                pendingPromises.push(input.__compressPromise);
+            }
+        });
+
+        const submitBtn = document.getElementById('webConfirmSubmitBtn');
+        if (pendingPromises.length > 0 && submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Memproses foto...';
+        }
+
+        Promise.all(pendingPromises).then(function() {
+            closeWebConfirmModal();
+            if (!form.isConnected) return;
+
+            form.dataset.webConfirmed = '1';
+            setTimeout(function() {
+                setFormSubmittingState(form, submitter);
+            }, 0);
+
+            if (typeof form.requestSubmit === 'function') {
+                if (submitter && form.contains(submitter) && !submitter.disabled) {
+                    form.requestSubmit(submitter);
+                } else {
+                    form.requestSubmit();
+                }
+            } else {
+                HTMLFormElement.prototype.submit.call(form);
+            }
+        });
     }
 
     if (!window.__webConfirmInitialized) {
         window.__webConfirmInitialized = true;
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.type === 'file') {
+                compressImageInput(e.target);
+            }
+        }, true);
+
         document.addEventListener('submit', function(e) {
             const form = e.target;
             if (!(form instanceof HTMLFormElement)) return;

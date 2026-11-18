@@ -43,11 +43,8 @@ class LandingPageController extends Controller
         ];
 
         $data_pelatih = collect($dbPelatih);
-        foreach ($daftarPelatihResmi as $idx => $namaResmi) {
-            $exists = $data_pelatih->contains(function ($p) use ($namaResmi) {
-                return strtolower(trim($p->nama)) === strtolower(trim($namaResmi));
-            });
-            if (!$exists) {
+        if ($data_pelatih->isEmpty()) {
+            foreach ($daftarPelatihResmi as $idx => $namaResmi) {
                 $userMatch = DB::table('users')
                     ->whereRaw('LOWER(TRIM(nama)) = ?', [strtolower(trim($namaResmi))])
                     ->first();
