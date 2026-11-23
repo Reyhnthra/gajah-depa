@@ -1157,18 +1157,183 @@
                 </div>
 
             @else
-                <div class="text-center mb-12">
+                <div class="text-center mb-10">
                     <h2 class="text-3xl font-extrabold tracking-tight text-[#1e293b] sm:text-4xl">
                         Pendaftaran Baru
                     </h2>
                     <p class="mt-2 text-base text-gray-500 tracking-wide">
-                        Mulai perjalanan renang Anda bersama Gajah Depa
+                        Mulai perjalanan renang Anda bersama Gajah Depa Akuatik
                     </p>
                 </div>
 
-                <form action="{{ route('pendaftaran.store') }}" method="POST" enctype="multipart/form-data"
-                    class="bg-white rounded-[24px] p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 space-y-8">
+                @php
+                    $autoOpenForm = $errors->any() || old('nama_siswa');
+                @endphp
+
+                {{-- TAHAP 1: SYARAT DAN KETENTUAN PENDAFTARAN MEMBER (ALA ICLOUD BOX) --}}
+                <div id="syarat-ketentuan-card"
+                    class="{{ $autoOpenForm ? 'hidden' : '' }} bg-white rounded-[24px] p-6 sm:p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 transition-all duration-300">
+
+                    {{-- Header Icon & Judul --}}
+                    <div class="text-center mb-6">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-cyan-50 border border-cyan-100 text-[#008cc9] flex items-center justify-center mx-auto mb-3 shadow-2xs">
+                            <i class="fa-solid fa-file-shield text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight uppercase">
+                            SYARAT DAN KETENTUAN PENDAFTARAN MEMBER
+                        </h3>
+                        <p class="text-sm sm:text-base font-bold text-[#008cc9] tracking-wide uppercase mt-0.5">
+                            GAJAHDEPA AKUATIK SUMEDANG
+                        </p>
+                        <p class="mt-2 text-xs sm:text-sm text-slate-500 max-w-2xl mx-auto leading-relaxed">
+                            Mohon membaca dan memahami seluruh syarat dan ketentuan berikut sebelum melakukan pendaftaran
+                            sebagai anggota Gajahdepa Akuatik Sumedang.
+                        </p>
+                    </div>
+
+                    {{-- Kotak Scrollable Syarat & Ketentuan (iCloud Style) --}}
+                    <div id="terms-scroll-box"
+                        class="bg-[#f8fafc] border border-slate-200/90 rounded-2xl p-5 sm:p-7 max-h-[380px] sm:max-h-[420px] overflow-y-auto text-xs sm:text-sm text-slate-700 leading-relaxed space-y-5 shadow-inner">
+
+                        <div>
+                            <h4 class="font-extrabold text-slate-900 text-sm sm:text-base mb-2">
+                                A. Keanggotaan dan Komitmen Atlet
+                            </h4>
+                            <ol class="list-decimal pl-5 space-y-1.5 text-slate-700">
+                                <li>Atlet bersedia menjadi anggota Gajahdepa Akuatik Sumedang dan mengikuti kegiatan latihan
+                                    sesuai jadwal serta ketentuan yang berlaku.</li>
+                                <li>Atlet wajib mematuhi tata tertib latihan, menjaga kedisiplinan, menghormati pelatih,
+                                    menjunjung tinggi sportivitas, serta menjaga nama baik club.</li>
+                                <li>Orang tua/wali wajib memenuhi kewajiban administrasi dan pembayaran iuran sesuai
+                                    ketentuan yang telah ditetapkan oleh club.</li>
+                            </ol>
+                        </div>
+
+                        <div>
+                            <h4 class="font-extrabold text-slate-900 text-sm sm:text-base mb-2">
+                                B. Kehadiran Orang Tua/Wali dan Keselamatan Atlet
+                            </h4>
+                            <ol class="list-decimal pl-5 space-y-1.5 text-slate-700">
+                                <li>Orang tua/wali wajib hadir dan menunggu anak selama kegiatan latihan berlangsung di area
+                                    sekitar tempat latihan yang telah ditentukan.</li>
+                                <li>Tanggung jawab pengawasan dan keselamatan atlet oleh pelatih berlaku selama sesi latihan
+                                    resmi, sejak latihan dimulai hingga dinyatakan selesai oleh pelatih.</li>
+                                <li>Keselamatan dan pengawasan anak sebelum latihan dimulai maupun setelah latihan selesai
+                                    menjadi tanggung jawab orang tua/wali.</li>
+                                <li>Apabila terjadi keterlambatan penjemputan, orang tua/wali wajib segera memberikan
+                                    konfirmasi kepada pelatih dan bertanggung jawab atas pengawasan anak setelah sesi
+                                    latihan resmi berakhir.</li>
+                            </ol>
+                        </div>
+
+                        <div>
+                            <h4 class="font-extrabold text-slate-900 text-sm sm:text-base mb-2">
+                                C. Ketentuan Perpindahan Club dan Mutasi Atlet
+                            </h4>
+                            <ol class="list-decimal pl-5 space-y-1.5 text-slate-700">
+                                <li>Perpindahan atlet ke club renang lain wajib diberitahukan secara tertulis kepada
+                                    pengurus club paling lambat 30 (tiga puluh) hari sebelum tanggal perpindahan, kecuali
+                                    terdapat alasan mendesak atau kesepakatan lain.</li>
+                                <li>Orang tua/wali wajib menyelesaikan kewajiban administrasi dan finansial yang telah
+                                    disepakati sebelum proses perpindahan dilakukan.</li>
+                                <li>Proses mutasi atlet harus mendapatkan persetujuan tertulis dari orang tua/wali dan
+                                    mengikuti prosedur serta ketentuan organisasi atau federasi olahraga renang yang
+                                    berlaku.</li>
+                                <li>Surat keluar atau rekomendasi mutasi diterbitkan setelah seluruh kewajiban administrasi
+                                    dan finansial atlet diselesaikan.</li>
+                                <li>Apabila atlet berpindah ke club lain sebelum masa pembinaan yang disepakati berakhir,
+                                    dikenakan biaya kompensasi pembinaan (<em>development fee</em>) sebesar Rp500.000 atau
+                                    sesuai perhitungan berdasarkan masa pembinaan yang telah berjalan. Ketentuan ini
+                                    dikecualikan untuk kondisi kahar (<em>force majeure</em>) yang dapat dibuktikan.</li>
+                                <li>Perpindahan atau keikutsertaan atlet di club lain tanpa menyelesaikan prosedur mutasi
+                                    dapat mengakibatkan konsekuensi administratif sesuai ketentuan organisasi olahraga yang
+                                    berlaku.</li>
+                            </ol>
+                        </div>
+
+                        <div>
+                            <h4 class="font-extrabold text-slate-900 text-sm sm:text-base mb-2">
+                                D. Hak dan Kewajiban Selama Menjadi Member
+                            </h4>
+                            <ol class="list-decimal pl-5 space-y-1.5 text-slate-700">
+                                <li>Club berkewajiban memberikan pembinaan sesuai kemampuan dan program latihan serta
+                                    memperlakukan atlet secara adil, aman, dan tanpa kekerasan.</li>
+                                <li>Orang tua/wali berhak memperoleh informasi mengenai perkembangan latihan, prestasi, dan
+                                    ketentuan keanggotaan atlet.</li>
+                                <li>Setiap permasalahan atau perselisihan antara orang tua/wali dengan pihak club diutamakan
+                                    untuk diselesaikan melalui musyawarah sesuai ketentuan yang berlaku.</li>
+                            </ol>
+                        </div>
+
+                        <div class="pt-2 border-t border-slate-200">
+                            <h4 class="font-extrabold text-slate-900 text-sm sm:text-base mb-2">
+                                E. Pernyataan Persetujuan
+                            </h4>
+                            <p class="mb-2 text-slate-700">
+                                Dengan memberikan tanda centang pada kotak persetujuan di bawah ini, saya selaku orang
+                                tua/wali menyatakan bahwa:
+                            </p>
+                            <ul class="list-disc pl-5 space-y-1 text-slate-700 font-medium">
+                                <li>Saya telah membaca dan memahami seluruh syarat dan ketentuan pendaftaran member
+                                    Gajahdepa Akuatik Sumedang.</li>
+                                <li>Saya menyetujui seluruh ketentuan yang telah ditetapkan dan bersedia melaksanakannya
+                                    dengan penuh tanggung jawab selama anak saya terdaftar sebagai anggota club.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {{-- Checkbox Persetujuan --}}
+                    <div id="terms-checkbox-wrapper"
+                        class="mt-5 p-4 rounded-2xl bg-sky-50/70 border border-sky-200/80 transition-all duration-200">
+                        <label for="agree-terms-checkbox"
+                            class="flex items-start gap-3 cursor-pointer select-none">
+                            <input type="checkbox" id="agree-terms-checkbox" {{ $autoOpenForm ? 'checked' : '' }}
+                                onchange="handleTermsCheckboxChange(this.checked)"
+                                class="mt-0.5 h-5 w-5 rounded-md border-slate-300 text-[#008cc9] focus:ring-[#008cc9] cursor-pointer shrink-0">
+                            <span class="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
+                                Saya telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan pendaftaran member
+                                Gajahdepa Akuatik Sumedang.
+                            </span>
+                        </label>
+                        <p id="terms-error-msg" class="hidden text-xs font-bold text-rose-600 mt-2 pl-8">
+                            <i class="fa-solid fa-circle-exclamation mr-1"></i> Silakan centang kotak persetujuan terlebih
+                            dahulu untuk melanjutkan pendaftaran.
+                        </p>
+                    </div>
+
+                    {{-- Baris Tombol Aksi Bawah (Ala iCloud: Tidak Setuju / Setuju) --}}
+                    <div class="mt-6 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
+                        <button type="button" onclick="handleDeclineTerms()"
+                            class="w-full sm:w-auto px-6 py-3 rounded-xl bg-slate-200/80 hover:bg-slate-300/80 text-slate-700 text-xs sm:text-sm font-bold transition cursor-pointer">
+                            Tidak Setuju
+                        </button>
+                        <button type="button" id="btn-accept-terms" onclick="handleAcceptTerms()"
+                            class="w-full sm:w-auto px-8 py-3 rounded-xl bg-[#008cc9] hover:bg-cyan-600 text-white text-xs sm:text-sm font-bold shadow-md transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 {{ $autoOpenForm ? '' : 'opacity-60' }}">
+                            <span>Setuju &amp; Isi Formulir</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- TAHAP 2: FORMULIR PENDAFTARAN BARU (MUNCUL SETELAH SETUJU) --}}
+                <form id="form-pendaftaran-baru" action="{{ route('pendaftaran.store') }}" method="POST"
+                    enctype="multipart/form-data"
+                    class="{{ $autoOpenForm ? '' : 'hidden' }} bg-white rounded-[24px] p-8 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-gray-100 space-y-8">
                     @csrf
+
+                    {{-- Banner Status Persetujuan Syarat & Ketentuan --}}
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-xs sm:text-sm">
+                        <div class="flex items-center gap-2.5 text-emerald-800 font-bold">
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-base shrink-0"></i>
+                            <span>Syarat dan Ketentuan Pendaftaran Member telah disetujui.</span>
+                        </div>
+                        <button type="button" onclick="showTermsAgain()"
+                            class="text-xs font-bold text-[#008cc9] hover:text-cyan-700 underline shrink-0 self-start sm:self-auto cursor-pointer">
+                            Baca Kembali S&amp;K
+                        </button>
+                    </div>
 
                     @if ($errors->any())
                         <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-sm text-red-600 space-y-1">
@@ -1546,6 +1711,85 @@
     </footer>
 
     <script>
+        function handleTermsCheckboxChange(isChecked) {
+            const acceptBtn = document.getElementById('btn-accept-terms');
+            const errMsg = document.getElementById('terms-error-msg');
+            const wrapper = document.getElementById('terms-checkbox-wrapper');
+            if (acceptBtn) {
+                if (isChecked) {
+                    acceptBtn.classList.remove('opacity-60');
+                } else {
+                    acceptBtn.classList.add('opacity-60');
+                }
+            }
+            if (isChecked) {
+                if (errMsg) errMsg.classList.add('hidden');
+                if (wrapper) {
+                    wrapper.classList.remove('border-rose-400', 'bg-rose-50/70');
+                    wrapper.classList.add('border-sky-200/80', 'bg-sky-50/70');
+                }
+            }
+        }
+
+        function handleAcceptTerms() {
+            const cb = document.getElementById('agree-terms-checkbox');
+            const errMsg = document.getElementById('terms-error-msg');
+            const wrapper = document.getElementById('terms-checkbox-wrapper');
+            const termsCard = document.getElementById('syarat-ketentuan-card');
+            const formEl = document.getElementById('form-pendaftaran-baru');
+
+            if (!cb || !cb.checked) {
+                if (errMsg) errMsg.classList.remove('hidden');
+                if (wrapper) {
+                    wrapper.classList.remove('border-sky-200/80', 'bg-sky-50/70');
+                    wrapper.classList.add('border-rose-400', 'bg-rose-50/70');
+                    wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                if (cb) cb.focus();
+                return;
+            }
+
+            if (termsCard) termsCard.classList.add('hidden');
+            if (formEl) formEl.classList.remove('hidden');
+
+            const daftarSection = document.getElementById('daftar');
+            if (daftarSection) {
+                daftarSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function handleDeclineTerms() {
+            const cb = document.getElementById('agree-terms-checkbox');
+            const termsCard = document.getElementById('syarat-ketentuan-card');
+            const formEl = document.getElementById('form-pendaftaran-baru');
+
+            if (cb) cb.checked = false;
+            handleTermsCheckboxChange(false);
+
+            if (formEl) formEl.classList.add('hidden');
+            if (termsCard) termsCard.classList.remove('hidden');
+
+            const cabangSection = document.getElementById('cabang');
+            if (cabangSection) {
+                cabangSection.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function showTermsAgain() {
+            const termsCard = document.getElementById('syarat-ketentuan-card');
+            const formEl = document.getElementById('form-pendaftaran-baru');
+
+            if (formEl) formEl.classList.add('hidden');
+            if (termsCard) termsCard.classList.remove('hidden');
+
+            const daftarSection = document.getElementById('daftar');
+            if (daftarSection) {
+                daftarSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
         function cleanWhatsAppNumber(input) {
             if (!input) return;
             let val = input.value.replace(/[^0-9]/g, '');
