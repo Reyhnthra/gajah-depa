@@ -45,7 +45,8 @@
             <div class="flex items-center gap-x-2 min-w-0">
                 <img src="{{ asset('images/logo.jpg') }}" alt="Logo Gajah Depa Akuatik"
                     class="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover shadow-sm shrink-0">
-                <span class="text-base sm:text-xl font-bold tracking-tight text-[#008cc9] truncate">Gajah Depa Akuatik</span>
+                <span class="text-base sm:text-xl font-bold tracking-tight text-[#008cc9] truncate">Gajah Depa
+                    Akuatik</span>
             </div>
             <div class="hidden md:flex md:gap-x-8 lg:gap-x-10">
                 <a href="#keunggulan"
@@ -67,7 +68,8 @@
         <!-- Mobile Navigation Links -->
         <div class="md:hidden border-t border-slate-100 px-3 py-2 overflow-x-auto">
             <div class="flex items-center justify-between sm:justify-center gap-x-4 min-w-max mx-auto">
-                <a href="#keunggulan" class="text-xs font-medium text-gray-600 hover:text-[#008cc9] transition">Keunggulan</a>
+                <a href="#keunggulan"
+                    class="text-xs font-medium text-gray-600 hover:text-[#008cc9] transition">Keunggulan</a>
                 <a href="#galeri" class="text-xs font-medium text-gray-600 hover:text-[#008cc9] transition">Galeri</a>
                 <a href="#pelatih" class="text-xs font-medium text-gray-600 hover:text-[#008cc9] transition">Pelatih</a>
                 <a href="#cabang" class="text-xs font-medium text-gray-600 hover:text-[#008cc9] transition">Cabang</a>
@@ -262,8 +264,7 @@
                     class="bg-white rounded-[24px] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:border-cyan-300 transition-all duration-300 flex flex-col group">
                     <div class="relative h-44 overflow-hidden">
                         <img src="{{ file_exists(public_path('images/higienis.jpeg')) ? asset('images/higienis.jpeg') : (file_exists(public_path('images/higienis.jpg')) ? asset('images/higienis.jpg') : asset('images/higienis.png')) }}"
-                            alt="Fasilitas Kolam Terawat"
-                            style="object-position: center top;"
+                            alt="Fasilitas Kolam Terawat" style="object-position: center top;"
                             class="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
                         <span
@@ -291,8 +292,7 @@
                     class="bg-white rounded-[24px] overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:border-cyan-300 transition-all duration-300 flex flex-col group">
                     <div class="relative h-44 overflow-hidden">
                         <img src="{{ file_exists(public_path('images/nilai.jpeg')) ? asset('images/nilai.jpeg') : (file_exists(public_path('images/nilai.jpg')) ? asset('images/nilai.jpg') : asset('images/nilai.png')) }}"
-                            alt="Raport & Evaluasi Digital"
-                            style="object-position: center bottom;"
+                            alt="Raport & Evaluasi Digital" style="object-position: center bottom;"
                             class="w-full h-full object-cover object-bottom group-hover:scale-110 transition-transform duration-500">
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
                         <span
@@ -1184,11 +1184,11 @@
                             SYARAT DAN KETENTUAN PENDAFTARAN MEMBER
                         </h3>
                         <p class="text-sm sm:text-base font-bold text-[#008cc9] tracking-wide uppercase mt-0.5">
-                            GAJAHDEPA AKUATIK SUMEDANG
+                            GAJAH DEPA AKUATIK
                         </p>
                         <p class="mt-2 text-xs sm:text-sm text-slate-500 max-w-2xl mx-auto leading-relaxed">
                             Mohon membaca dan memahami seluruh syarat dan ketentuan berikut sebelum melakukan pendaftaran
-                            sebagai anggota Gajahdepa Akuatik Sumedang.
+                            sebagai anggota Gajah Depa Akuatik.
                         </p>
                     </div>
 
@@ -1201,7 +1201,7 @@
                                 A. Keanggotaan dan Komitmen Atlet
                             </h4>
                             <ol class="list-decimal pl-5 space-y-1.5 text-slate-700">
-                                <li>Atlet bersedia menjadi anggota Gajahdepa Akuatik Sumedang dan mengikuti kegiatan latihan
+                                <li>Atlet bersedia menjadi anggota Gajah Depa Akuatik dan mengikuti kegiatan latihan
                                     sesuai jadwal serta ketentuan yang berlaku.</li>
                                 <li>Atlet wajib mematuhi tata tertib latihan, menjaga kedisiplinan, menghormati pelatih,
                                     menjunjung tinggi sportivitas, serta menjaga nama baik club.</li>
@@ -1276,7 +1276,7 @@
                             </p>
                             <ul class="list-disc pl-5 space-y-1 text-slate-700 font-medium">
                                 <li>Saya telah membaca dan memahami seluruh syarat dan ketentuan pendaftaran member
-                                    Gajahdepa Akuatik Sumedang.</li>
+                                    Gajah Depa Akuatik.</li>
                                 <li>Saya menyetujui seluruh ketentuan yang telah ditetapkan dan bersedia melaksanakannya
                                     dengan penuh tanggung jawab selama anak saya terdaftar sebagai anggota club.</li>
                             </ul>
@@ -1286,14 +1286,13 @@
                     {{-- Checkbox Persetujuan --}}
                     <div id="terms-checkbox-wrapper"
                         class="mt-5 p-4 rounded-2xl bg-sky-50/70 border border-sky-200/80 transition-all duration-200">
-                        <label for="agree-terms-checkbox"
-                            class="flex items-start gap-3 cursor-pointer select-none">
+                        <label for="agree-terms-checkbox" class="flex items-start gap-3 cursor-pointer select-none">
                             <input type="checkbox" id="agree-terms-checkbox" {{ $autoOpenForm ? 'checked' : '' }}
                                 onchange="handleTermsCheckboxChange(this.checked)"
                                 class="mt-0.5 h-5 w-5 rounded-md border-slate-300 text-[#008cc9] focus:ring-[#008cc9] cursor-pointer shrink-0">
                             <span class="text-xs sm:text-sm font-bold text-slate-800 leading-snug">
                                 Saya telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan pendaftaran member
-                                Gajahdepa Akuatik Sumedang.
+                                Gajah Depa Akuatik.
                             </span>
                         </label>
                         <p id="terms-error-msg" class="hidden text-xs font-bold text-rose-600 mt-2 pl-8">
@@ -1702,7 +1701,7 @@
 
             <div
                 class="mt-12 pt-6 border-t border-slate-800/60 text-center text-xs text-slate-500 tracking-wide flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-                <span>© {{ date('Y') }} Gajah Depa Akuatik Sumedang. All rights reserved.</span>
+                <span>© {{ date('Y') }} Gajah Depa Akuatik. All rights reserved.</span>
                 <span class="hidden sm:inline text-slate-700">•</span>
                 <span>Created by reyhnthra</span>
             </div>
